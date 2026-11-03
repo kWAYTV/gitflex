@@ -145,7 +145,7 @@ export default async function DashboardPage() {
             <DomainShareBar domains={domains} />
             {domains.slice(0, TOP_DOMAINS).map(({ category }) => (
               <section className="grid gap-2" key={category}>
-                <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                <h3 className="font-medium text-muted-foreground text-xs">
                   {categoryLabel(category)}
                 </h3>
                 <div className="flex flex-wrap gap-1.5">
