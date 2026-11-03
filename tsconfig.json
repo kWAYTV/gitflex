@@ -1,0 +1,3 @@
+{
+  "extends": "@gitflex/config/tsconfig.base.json"
+}
