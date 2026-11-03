@@ -176,6 +176,29 @@ We do not know its proprietary scoring formulas.
 
 Our implementation must provide equivalent concepts using independently designed, explainable calculations.
 
+## 2.0 Reference review: lessons
+
+Observations from reviewing the reference profile (November 2026). Use them to shape our design; do not copy the layout.
+
+Weaknesses to avoid:
+
+- **Tabs contradict each other.** The Tech Stacks tab lists React and Next.js while the Roadmap shows React and TypeScript at 0 %. Every view must read from the same per-snapshot evidence, so a technology cannot be "detected" on one tab and "absent" on another.
+- **Canned explanations.** Dimension descriptions do not match the scores (a 4.53 / 5 security score described as "poor coding practices"). Generate explanations deterministically from the evidence and thresholds that produced the score.
+- **Outlier-dominated language chart.** One large C/C++ repository makes C ~70 % of the donut. Build and configuration files (Dockerfile, Makefile, Batchfile, CMake, Xmake) are mixed in with programming languages. A 20-slice donut with a paginated legend is unreadable.
+- **Concepts mixed with technologies.** The stack view mixes concrete technologies (Redis, Express, Winston) with vague practices ("Scaling", "Async", "Microservices Design") without saying which is which or why either was inferred.
+- **Duplicated nodes.** The same technology appears in several domains (Next.js under Frontend and Backend, WebSocket twice), so the domain percentages double-count.
+- **Fixed roadmap tree.** The roadmap is a hardcoded tree (JavaScript → TypeScript → Angular …) with percentages that are not linked to the detected stack.
+- **No evidence drill-down.** No item links to the repositories or files that support it.
+
+Ideas worth adopting, in our own form:
+
+- A small fixed set of profile sections with a persistent sidebar or tab bar and a share action.
+- A roadmap-node detail drawer with a concept checklist, but only for concepts we can actually back with code-level evidence (Phase C).
+- Repository status buckets with counts: analyzed, failed, forked, collaborated, vendored, small or inactive. Also show "N detected · M analyzable" so exclusions are visible.
+- Language and technology filters on the repository explorer.
+- Per-repository quality badges (A–E grades), once quality analysis exists. Each grade must be expandable into its findings.
+- A visible "last scanned" date plus a re-scan action.
+
 ## 2.1 Overview
 
 Display:
@@ -214,9 +237,24 @@ Distinguish between byte distribution and actual developer experience.
 
 A generated JavaScript bundle must not count as meaningful JavaScript expertise.
 
+Presentation rules:
+
+- Default to **programming languages only**. Configuration, markup and build languages (Linguist types `data`, `markup`, `prose`, and build tools such as Dockerfile, Makefile and CMake) go behind a toggle.
+- Offer two weightings, switchable: **Bytes** (raw share) and **Repositories** (share of analyzed repositories where the language is the primary or a secondary language). Repository weighting is the default because it resists a single huge repository.
+- Fold languages under 1 % into "Other" in the chart; the table below the chart lists every language with exact bytes, repository count and percentage.
+- Use a horizontal stacked bar or bar list, not a donut with more than 6 slices.
+- Each language row links to the repository explorer filtered by that language.
+
 ## 2.3 Tech Stacks
 
 Display detected technologies grouped by category.
+
+Rules:
+
+- Each technology belongs to exactly **one** primary category from the registry. Cross-domain technologies (Next.js) are not duplicated. Domain share is computed from primary categories only.
+- **Technologies** (registry entries with detection evidence) and **practices** (derived signals such as CI/CD, testing and containerization, see §7.4) appear in separate sections. Practices list the technologies and evidence that imply them.
+- Domain share is the sum of each category's technologies' confidence-weighted repository counts, normalized to 100 %. It must be explainable as "N repositories, M technologies".
+- Every technology shows confidence (evidence strength label plus raw value in a tooltip), usage type, repository count, and a link to its evidence.
 
 Examples:
 
@@ -295,6 +333,18 @@ Distinguish:
 
 The roadmap is an exploration and visualization tool, not an automatic recommendation engine.
 
+The graph is generated from the registry's `related` and `prerequisites` edges, restricted to the developer's detected technologies plus their one-hop neighbours. It is not a fixed, hand-drawn tree.
+
+Node states:
+
+- **Demonstrated**: detected with strong evidence in two or more repositories.
+- **Detected**: detected in at least one repository.
+- **Adjacent**: not detected, but related to or a successor of a detected technology. These are shown muted and never carry a percentage.
+
+Selecting a node opens a detail sheet with the description, docs link, evidence summary, supporting repositories, and related technologies. A concept checklist inside the sheet (roadmap.sh-style) is Phase C, and each checked concept must link to the code evidence behind it.
+
+The roadmap must use the same snapshot data as Tech Stacks. A technology shown as detected on one tab must never appear as undetected on another.
+
 ## 2.5 Repositories
 
 Display:
@@ -327,6 +377,19 @@ Allow sorting and filtering by:
 - Analysis status.
 - Ownership.
 - Archived status.
+
+Summary buckets, shown as toggleable filter badges with counts:
+
+- Analyzed.
+- Failed.
+- Skipped (empty, too large, unsupported).
+- Forked.
+- Collaborated (not owned).
+- Excluded by the user.
+
+Show "N discovered · M analyzable · K analyzed" above the list, so it is always clear why a repository does not contribute.
+
+Each repository row shows: languages (top 3), detected technologies (top 5 as badges), size, stars, last push, and analysis status. Quality grades are added once quality analysis exists (§6.x), and each grade expands into its findings.
 
 ---
 
@@ -1256,6 +1319,23 @@ Suggested proficiency levels:
 
 Do not automatically classify someone as an expert based on repository counts.
 
+## 7.5 Engineering practices
+
+Practices are derived signals, kept separate from technologies. Each practice is defined in code as a pure rule over the detected technologies and file evidence of a repository:
+
+| Practice | Implied by |
+|---|---|
+| Continuous integration | `github-actions`, `gitlab-ci` |
+| Automated testing | any `testing` category technology |
+| Containerization | `docker`, `kubernetes` |
+| Infrastructure as code | `terraform` |
+| Dependency automation | `dependency-automation` |
+| Static typing | `typescript`, `pydantic`, strict compiler configs |
+| Linting and formatting | `eslint`, `prettier`, `biome` |
+| Security scanning | `security-scanning` |
+
+A practice reports the repositories where it was observed and the technologies that implied it. Vague labels ("Scaling", "Microservices Design") are not emitted unless a concrete, documented rule supports them.
+
 ---
 
 # 8. SCORING ENGINE
@@ -2171,7 +2251,25 @@ Visual direction:
 - High-quality charts.
 - Excellent responsive behaviour.
 
-Use shadcn/ui.
+Use shadcn/ui for every UI element. Components live in `packages/ui` and are added with the shadcn CLI. Do not hand-roll primitives that shadcn provides.
+
+Component mapping:
+
+| Need | Component |
+|---|---|
+| Profile sections | `Tabs` (URL-backed: each tab is a route segment) |
+| Status, category, usage labels | `Badge` |
+| Scan and language progress | `Progress` |
+| Language / technology / repository lists | `Table` |
+| Charts | `Chart` (shadcn wrapper over Recharts) |
+| Confidence and raw values | `Tooltip` / `HoverCard` |
+| Technology and roadmap node detail | `Sheet` |
+| Evidence groups | `Collapsible` / `Accordion` |
+| Filters and sort | `ToggleGroup`, `Select`, `Command` (search) |
+| Layout dividers | `Separator`, `ScrollArea` |
+| Loading | `Skeleton` |
+| No data yet | `Empty` |
+| Errors and partial data | `Alert` |
 
 Avoid excessive decorative animations.
 

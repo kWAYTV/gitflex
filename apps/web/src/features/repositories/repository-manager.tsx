@@ -1,6 +1,7 @@
 "use client";
 
 import type { UserRepository } from "@gitflex/db/queries/repositories";
+import { Badge } from "@gitflex/ui/components/badge";
 import { Button } from "@gitflex/ui/components/button";
 import {
   Empty,
@@ -9,6 +10,17 @@ import {
   EmptyTitle,
 } from "@gitflex/ui/components/empty";
 import { Input } from "@gitflex/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@gitflex/ui/components/select";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@gitflex/ui/components/toggle-group";
 import { RefreshCw } from "lucide-react";
 import {
   type ChangeEvent,
@@ -24,60 +36,75 @@ import {
   setRepositoryInclusionAction,
   syncRepositoriesAction,
 } from "./actions";
+import type { RepositoryInsight } from "./insights";
 import { RepositoryRow } from "./repository-row";
 
-type OwnershipFilter = "all" | UserRepository["ownership"] | "fork";
+const ANY = "__any__";
 
-const OWNERSHIP_FILTERS: { label: string; value: OwnershipFilter }[] = [
+type Bucket =
+  | "all"
+  | "analyzed"
+  | "failed"
+  | "skipped"
+  | "not-analyzed"
+  | "forks"
+  | "collaborations"
+  | "excluded";
+
+const BUCKETS: { label: string; value: Bucket }[] = [
   { label: "All", value: "all" },
-  { label: "Owned", value: "owner" },
-  { label: "Forks", value: "fork" },
-  { label: "Organizations", value: "organization" },
-  { label: "Collaborations", value: "collaborator" },
+  { label: "Analyzed", value: "analyzed" },
+  { label: "Failed", value: "failed" },
+  { label: "Skipped", value: "skipped" },
+  { label: "Not analyzed", value: "not-analyzed" },
+  { label: "Forks", value: "forks" },
+  { label: "Collaborations", value: "collaborations" },
+  { label: "Excluded", value: "excluded" },
 ];
 
-function matchesOwnership(repository: UserRepository, filter: OwnershipFilter) {
-  if (filter === "all") {
-    return true;
+function inBucket(
+  repository: UserRepository,
+  insight: RepositoryInsight | undefined,
+  bucket: Bucket
+): boolean {
+  const status = insight?.status ?? "not-analyzed";
+  switch (bucket) {
+    case "all":
+      return true;
+    case "analyzed":
+    case "failed":
+    case "skipped":
+      return status === bucket;
+    case "not-analyzed":
+      return status === "not-analyzed" || status === "pending";
+    case "forks":
+      return repository.isFork;
+    case "collaborations":
+      return repository.ownership !== "owner";
+    case "excluded":
+      return !repository.included;
+    default:
+      return true;
   }
-  if (filter === "fork") {
-    return repository.isFork;
-  }
-  return repository.ownership === filter && !repository.isFork;
 }
 
-function FilterButton({
-  active,
-  label,
-  onSelect,
-  value,
-}: {
-  active: boolean;
-  label: string;
-  onSelect: (value: OwnershipFilter) => void;
-  value: OwnershipFilter;
-}) {
-  const handleClick = useCallback(() => onSelect(value), [onSelect, value]);
-
-  return (
-    <Button
-      onClick={handleClick}
-      size="sm"
-      variant={active ? "secondary" : "ghost"}
-    >
-      {label}
-    </Button>
-  );
+function optionsFrom(values: Iterable<string>) {
+  return [...new Set(values)]
+    .sort((a, b) => a.localeCompare(b))
+    .map((value) => ({ label: value, value }));
 }
 
 export function RepositoryManager({
+  insights,
   repositories,
 }: {
+  insights: Record<string, RepositoryInsight>;
   repositories: UserRepository[];
 }) {
   const [query, setQuery] = useState("");
-  const [ownershipFilter, setOwnershipFilter] =
-    useState<OwnershipFilter>("all");
+  const [bucket, setBucket] = useState<Bucket>("all");
+  const [language, setLanguage] = useState(ANY);
+  const [technology, setTechnology] = useState(ANY);
   const [isSyncing, startSync] = useTransition();
   const [, startInclusionUpdate] = useTransition();
   const [optimisticRepositories, applyInclusion] = useOptimistic(
@@ -90,19 +117,72 @@ export function RepositoryManager({
       )
   );
 
+  const languageOptions = useMemo(
+    () =>
+      optionsFrom(
+        Object.values(insights).flatMap((insight) =>
+          insight.languages.map((entry) => entry.name)
+        )
+      ),
+    [insights]
+  );
+  const technologyOptions = useMemo(
+    () =>
+      optionsFrom(
+        Object.values(insights).flatMap((insight) =>
+          insight.technologies.map((entry) => entry.name)
+        )
+      ),
+    [insights]
+  );
+
+  const bucketCounts = useMemo(
+    () =>
+      new Map(
+        BUCKETS.map(({ value }) => [
+          value,
+          optimisticRepositories.filter((repository) =>
+            inBucket(repository, insights[repository.id], value)
+          ).length,
+        ])
+      ),
+    [insights, optimisticRepositories]
+  );
+
   const visibleRepositories = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    return optimisticRepositories.filter(
-      (repository) =>
-        matchesOwnership(repository, ownershipFilter) &&
+    return optimisticRepositories.filter((repository) => {
+      const insight = insights[repository.id];
+      return (
+        inBucket(repository, insight, bucket) &&
+        (language === ANY ||
+          (insight?.languages.some((entry) => entry.name === language) ??
+            false)) &&
+        (technology === ANY ||
+          (insight?.technologies.some((entry) => entry.name === technology) ??
+            false)) &&
         (normalizedQuery === "" ||
-          repository.fullName.toLowerCase().includes(normalizedQuery) ||
-          repository.primaryLanguage?.toLowerCase().includes(normalizedQuery))
-    );
-  }, [optimisticRepositories, ownershipFilter, query]);
+          repository.fullName.toLowerCase().includes(normalizedQuery))
+      );
+    });
+  }, [bucket, insights, language, optimisticRepositories, query, technology]);
 
   const handleQueryChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => setQuery(event.target.value),
+    []
+  );
+  const handleBucketChange = useCallback((value: string[]) => {
+    const [next] = value;
+    if (next) {
+      setBucket(next as Bucket);
+    }
+  }, []);
+  const handleLanguageChange = useCallback(
+    (value: string | null) => setLanguage(value ?? ANY),
+    []
+  );
+  const handleTechnologyChange = useCallback(
+    (value: string | null) => setTechnology(value ?? ANY),
     []
   );
 
@@ -169,11 +249,11 @@ export function RepositoryManager({
     <div className="grid gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-bold text-2xl">Repositories</h1>
+          <h2 className="font-bold text-xl">Repositories</h2>
           <p className="text-muted-foreground text-sm">
             {repositories.length === 0
               ? "Import your repositories from GitHub to choose what your profile is built from."
-              : `${includedCount} of ${repositories.length} repositories included in your profile`}
+              : `${repositories.length} discovered · ${includedCount} included · ${bucketCounts.get("analyzed") ?? 0} analyzed`}
           </p>
         </div>
         <Button disabled={isSyncing} onClick={sync}>
@@ -194,23 +274,72 @@ export function RepositoryManager({
         </Empty>
       ) : (
         <>
+          <ToggleGroup
+            aria-label="Repository status"
+            className="flex-wrap"
+            onValueChange={handleBucketChange}
+            size="sm"
+            value={[bucket]}
+            variant="outline"
+          >
+            {BUCKETS.map((entry) => (
+              <ToggleGroupItem key={entry.value} value={entry.value}>
+                {entry.label}
+                <Badge className="tabular-nums" variant="secondary">
+                  {bucketCounts.get(entry.value) ?? 0}
+                </Badge>
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+
           <div className="flex flex-wrap items-center gap-2">
             <Input
               aria-label="Search repositories"
               className="max-w-xs"
               onChange={handleQueryChange}
-              placeholder="Search by name or language"
+              placeholder="Search by name"
               value={query}
             />
-            {OWNERSHIP_FILTERS.map((filter) => (
-              <FilterButton
-                active={ownershipFilter === filter.value}
-                key={filter.value}
-                label={filter.label}
-                onSelect={setOwnershipFilter}
-                value={filter.value}
-              />
-            ))}
+            <Select
+              items={[
+                { label: "Any language", value: ANY },
+                ...languageOptions,
+              ]}
+              onValueChange={handleLanguageChange}
+              value={language}
+            >
+              <SelectTrigger aria-label="Language">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ANY}>Any language</SelectItem>
+                {languageOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              items={[
+                { label: "Any technology", value: ANY },
+                ...technologyOptions,
+              ]}
+              onValueChange={handleTechnologyChange}
+              value={technology}
+            >
+              <SelectTrigger aria-label="Technology">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ANY}>Any technology</SelectItem>
+                {technologyOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <div className="ml-auto flex gap-2">
               <Button onClick={includeVisible} size="sm" variant="outline">
                 Include shown
@@ -224,6 +353,7 @@ export function RepositoryManager({
           <ul className="divide-y border">
             {visibleRepositories.map((repository) => (
               <RepositoryRow
+                insight={insights[repository.id]}
                 key={repository.id}
                 onInclusionChange={setInclusion}
                 repository={repository}
