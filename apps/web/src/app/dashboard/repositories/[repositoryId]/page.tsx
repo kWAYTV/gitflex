@@ -123,9 +123,9 @@ export default async function RepositoryAnalysisPage({
             ? `Analyzed ${dateFormatter.format(analysis.analyzedAt)}`
             : "Analyzed"}
           {analysis.commitSha ? ` at ${analysis.commitSha.slice(0, 7)}` : ""}
-          {` · analyzer ${analysis.analyzerVersion}`}
+          {`, analyzer ${analysis.analyzerVersion}`}
           {summary
-            ? ` · ${summary.files.analyzed} of ${summary.files.total} files analyzed`
+            ? `, ${summary.files.analyzed} of ${summary.files.total} files analyzed`
             : ""}
           {summary?.files.truncated ? " (file list truncated)" : ""}
         </p>
@@ -171,7 +171,7 @@ export default async function RepositoryAnalysisPage({
               manifests or configuration files only report languages for now.
             </p>
           ) : (
-            <ul className="divide-y border">
+            <ul className="divide-y overflow-hidden rounded-lg border">
               {analysis.technologies.map((technology) => (
                 <li className="grid gap-1.5 p-3" key={technology.id}>
                   <div className="flex flex-wrap items-center gap-2">
@@ -191,7 +191,7 @@ export default async function RepositoryAnalysisPage({
                   <p className="text-muted-foreground text-xs">
                     {USAGE_LABELS[technology.usageType] ?? technology.usageType}
                     {technology.evidenceCount > technology.evidence.length
-                      ? ` · showing ${technology.evidence.length} of ${technology.evidenceCount} signals`
+                      ? `, showing ${technology.evidence.length} of ${technology.evidenceCount} signals`
                       : ""}
                   </p>
                   <EvidenceList evidence={technology.evidence} />

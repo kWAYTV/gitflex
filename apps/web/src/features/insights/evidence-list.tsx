@@ -6,13 +6,19 @@ export function EvidenceList({
   evidence: { kind: string; source: string }[];
 }) {
   return (
-    <ul className="grid gap-0.5 text-xs">
+    <ul className="grid divide-y text-sm">
       {evidence.map((record) => (
-        <li className="flex gap-2" key={`${record.kind}:${record.source}`}>
-          <span className="w-44 shrink-0 text-muted-foreground">
+        <li
+          className="grid gap-0.5 py-2 first:pt-0 last:pb-0 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-3"
+          key={`${record.kind}:${record.source}`}
+        >
+          <span className="text-muted-foreground">
             {EVIDENCE_KIND_LABELS[record.kind] ?? record.kind}
           </span>
-          <code className="min-w-0 truncate" title={record.source}>
+          <code
+            className="min-w-0 truncate font-mono text-[0.8125rem]"
+            title={record.source}
+          >
             {record.source}
           </code>
         </li>

@@ -22,7 +22,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { categoryLabel } from "@/features/insights/confidence";
 import { DomainShareBar } from "@/features/insights/domain-share";
-import { ShareBar } from "@/features/insights/share-bar";
+import { ShareChart } from "@/features/insights/share-chart";
 import {
   domainShares,
   summarizeTechnologies,
@@ -35,24 +35,35 @@ import { db, getSession } from "@/server/auth";
 const TOP_DOMAINS = 4;
 const TOP_TECHNOLOGIES_PER_DOMAIN = 6;
 
-function Stat({ label, value }: { label: string; value: number | string }) {
+function Stats({ items }: { items: { label: string; value: number }[] }) {
   return (
     <Card size="sm">
-      <CardHeader>
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-2xl tabular-nums">{value}</CardTitle>
-      </CardHeader>
+      <CardContent>
+        <dl className="grid grid-cols-2 gap-y-4 sm:grid-cols-4">
+          {items.map((item) => (
+            <div
+              className="grid gap-1 border-l px-4 first:border-l-0 first:pl-0 max-sm:nth-3:border-l-0 max-sm:nth-3:pl-0"
+              key={item.label}
+            >
+              <dt className="text-muted-foreground text-sm">{item.label}</dt>
+              <dd className="font-semibold text-3xl tabular-nums tracking-tight">
+                {item.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </CardContent>
     </Card>
   );
 }
 
-function SeeAll({ href }: { href: Route }) {
+function SeeAll({ children, href }: { children: string; href: Route }) {
   return (
     <Link
-      className="text-muted-foreground text-xs hover:text-foreground hover:underline"
+      className="rounded-sm text-muted-foreground text-sm underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"
       href={href}
     >
-      See all
+      {children}
     </Link>
   );
 }
@@ -91,53 +102,75 @@ export default async function DashboardPage() {
   const byCategory = Map.groupBy(summaries, (summary) => summary.category);
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-6">
       <ScanPanel initialScan={scanView} key={`${scan?.id}:${scan?.status}`} />
-
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Stat
-          label="Included repositories"
-          value={
-            repositories.filter((repository) => repository.included).length
-          }
-        />
-        <Stat
-          label="Analyzed"
-          value={states.filter((state) => state.status === "completed").length}
-        />
-        <Stat label="Technologies" value={summaries.length} />
-        <Stat label="Languages" value={applicationLanguages.length} />
-      </div>
 
       {snapshot ? (
         <ScoreSummary
-          action={<SeeAll href="/dashboard/score" />}
+          action={<SeeAll href="/dashboard/score">Breakdown</SeeAll>}
           score={snapshot.breakdown}
         />
       ) : null}
 
-      {applicationLanguages.length > 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Languages</CardTitle>
-            <CardDescription>
-              Share of repositories where each language is significant.
-            </CardDescription>
-            <CardAction>
-              <SeeAll href="/dashboard/languages" />
-            </CardAction>
-          </CardHeader>
-          <CardContent>
-            <ShareBar
-              slices={applicationLanguages.map((language) => ({
-                color: language.color,
-                name: language.name,
-                value: language.significantRepositories,
-              }))}
-            />
-          </CardContent>
-        </Card>
-      ) : null}
+      <Stats
+        items={[
+          {
+            label: "Included repositories",
+            value: repositories.filter((repository) => repository.included)
+              .length,
+          },
+          {
+            label: "Analyzed",
+            value: states.filter((state) => state.status === "completed")
+              .length,
+          },
+          { label: "Technologies", value: summaries.length },
+          { label: "Languages", value: applicationLanguages.length },
+        ]}
+      />
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {applicationLanguages.length > 0 ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Languages</CardTitle>
+              <CardDescription>
+                Share of repositories where each language is significant.
+              </CardDescription>
+              <CardAction>
+                <SeeAll href="/dashboard/languages">All languages</SeeAll>
+              </CardAction>
+            </CardHeader>
+            <CardContent>
+              <ShareChart
+                limit={6}
+                slices={applicationLanguages.map((language) => ({
+                  color: language.color,
+                  name: language.name,
+                  value: language.significantRepositories,
+                }))}
+              />
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {domains.length > 0 ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Domains</CardTitle>
+              <CardDescription>
+                Where your detected technologies concentrate.
+              </CardDescription>
+              <CardAction>
+                <SeeAll href="/dashboard/technologies">All technologies</SeeAll>
+              </CardAction>
+            </CardHeader>
+            <CardContent>
+              <DomainShareBar domains={domains} limit={6} />
+            </CardContent>
+          </Card>
+        ) : null}
+      </div>
 
       {domains.length > 0 ? (
         <Card>
@@ -146,15 +179,11 @@ export default async function DashboardPage() {
             <CardDescription>
               Most used per domain. Evidence strength is not proficiency.
             </CardDescription>
-            <CardAction>
-              <SeeAll href="/dashboard/technologies" />
-            </CardAction>
           </CardHeader>
-          <CardContent className="grid gap-5">
-            <DomainShareBar domains={domains} />
+          <CardContent className="grid gap-5 sm:grid-cols-2">
             {domains.slice(0, TOP_DOMAINS).map(({ category }) => (
-              <section className="grid gap-2" key={category}>
-                <h3 className="font-medium text-muted-foreground text-xs">
+              <section className="grid content-start gap-2" key={category}>
+                <h3 className="font-medium text-muted-foreground text-sm">
                   {categoryLabel(category)}
                 </h3>
                 <div className="flex flex-wrap gap-1.5">

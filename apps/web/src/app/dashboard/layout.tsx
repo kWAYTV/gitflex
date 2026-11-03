@@ -22,15 +22,17 @@ export default async function DashboardLayout({
   const { user } = session;
 
   return (
-    <div className="container mx-auto grid max-w-5xl gap-6 px-4 py-6">
-      <header className="grid gap-4">
-        <div className="flex items-center gap-3">
-          <Avatar className="size-12">
+    <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 sm:px-6">
+      <header className="grid gap-6">
+        <div className="flex items-center gap-4">
+          <Avatar className="size-14">
             {user.image ? <AvatarImage alt="" src={user.image} /> : null}
             <AvatarFallback>{user.username.slice(0, 2)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <h1 className="truncate font-bold text-xl">{user.name}</h1>
+            <h1 className="truncate font-semibold text-2xl tracking-tight">
+              {user.name}
+            </h1>
             <a
               className="inline-flex items-center gap-1 text-muted-foreground text-sm hover:text-foreground"
               href={`https://github.com/${user.username}`}

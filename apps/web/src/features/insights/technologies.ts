@@ -91,8 +91,8 @@ export function domainShares(
     .sort((a, b) => b.value - a.value);
 }
 
-/** Evenly spaced hues; the theme's chart palette is monochrome and too close for 10+ slices. */
+/** Golden-angle hues at low chroma, so 10+ slices stay distinct without leaving the roast palette. */
 export function chartColor(index: number): string {
   const GOLDEN_ANGLE = 137.5;
-  return `oklch(0.7 0.14 ${(index * GOLDEN_ANGLE + 250) % 360})`;
+  return `oklch(0.64 0.09 ${(index * GOLDEN_ANGLE + 45) % 360})`;
 }

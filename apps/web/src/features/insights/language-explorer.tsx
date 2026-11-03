@@ -20,7 +20,7 @@ import {
   type LanguageWeighting,
   languageWeight,
 } from "./languages";
-import { ShareBar } from "./share-bar";
+import { ShareChart } from "./share-chart";
 
 type LanguageScope = "application" | "all";
 
@@ -96,7 +96,7 @@ export function LanguageExplorer({
         {WEIGHTING_DESCRIPTIONS[weighting]}
       </p>
 
-      <ShareBar slices={rows} />
+      <ShareChart limit={10} slices={rows} />
 
       <Table>
         <TableHeader>

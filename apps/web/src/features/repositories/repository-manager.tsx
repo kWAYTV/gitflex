@@ -253,11 +253,15 @@ export function RepositoryManager({
           <p className="text-muted-foreground text-sm">
             {repositories.length === 0
               ? "Import your repositories from GitHub to choose what your profile is built from."
-              : `${repositories.length} discovered · ${includedCount} included · ${bucketCounts.get("analyzed") ?? 0} analyzed`}
+              : `${repositories.length} discovered, ${includedCount} included, ${bucketCounts.get("analyzed") ?? 0} analyzed`}
           </p>
         </div>
         <Button disabled={isSyncing} onClick={sync}>
-          <RefreshCw className={isSyncing ? "animate-spin" : undefined} />
+          <RefreshCw
+            className={
+              isSyncing ? "animate-spin motion-reduce:animate-none" : undefined
+            }
+          />
           {isSyncing ? "Syncing..." : "Sync from GitHub"}
         </Button>
       </div>
@@ -350,7 +354,7 @@ export function RepositoryManager({
             </div>
           </div>
 
-          <ul className="divide-y border">
+          <ul className="divide-y overflow-hidden rounded-lg border">
             {visibleRepositories.map((repository) => (
               <RepositoryRow
                 insight={insights[repository.id]}

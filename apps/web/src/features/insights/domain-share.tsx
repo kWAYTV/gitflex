@@ -1,11 +1,18 @@
 import { categoryLabel } from "./confidence";
-import { ShareBar } from "./share-bar";
+import { ShareChart } from "./share-chart";
 import { chartColor, type DomainShare } from "./technologies";
 
-export function DomainShareBar({ domains }: { domains: DomainShare[] }) {
+export function DomainShareBar({
+  domains,
+  limit,
+}: {
+  domains: DomainShare[];
+  limit?: number;
+}) {
   return (
     <div className="grid gap-2">
-      <ShareBar
+      <ShareChart
+        limit={limit}
         slices={domains.map((domain, index) => ({
           color: chartColor(index),
           name: categoryLabel(domain.category),

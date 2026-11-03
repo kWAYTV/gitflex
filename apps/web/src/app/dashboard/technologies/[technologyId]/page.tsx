@@ -113,12 +113,12 @@ export default async function TechnologyPage({
               </EmptyHeader>
             </Empty>
           ) : (
-            <ul className="divide-y border">
+            <ul className="divide-y overflow-hidden rounded-lg border">
               {usage.map((entry) => (
                 <li key={entry.repositoryId}>
                   <Collapsible>
                     <CollapsibleTrigger className="group flex w-full items-center gap-2 p-3 text-left text-sm hover:bg-muted/50">
-                      <ChevronDown className="size-3.5 shrink-0 transition-transform group-data-panel-open:rotate-180" />
+                      <ChevronDown className="size-3.5 shrink-0 transition-transform group-data-panel-open:rotate-180 motion-reduce:transition-none" />
                       <span className="truncate font-medium">
                         {entry.fullName}
                       </span>

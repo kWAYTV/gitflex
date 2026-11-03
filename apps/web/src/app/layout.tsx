@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 
 import "../index.css";
+import Footer from "@/components/footer";
 import Header from "@/components/header";
 import Providers from "@/components/providers";
 
-const plexSans = IBM_Plex_Sans({
+const geistSans = Geist({
   subsets: ["latin"],
-  variable: "--font-plex-sans",
-  weight: ["400", "500", "600", "700"],
+  variable: "--font-geist-sans",
+});
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
 });
 
 export const metadata: Metadata = {
@@ -23,12 +28,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${plexSans.variable} antialiased`}>
+    <html
+      className={`${geistSans.variable} ${geistMono.variable} overflow-x-clip`}
+      lang="en"
+      suppressHydrationWarning
+    >
+      <body className="overflow-x-clip">
         <Providers>
-          <div className="grid min-h-svh grid-rows-[auto_1fr]">
+          <a
+            className="fixed top-3 left-3 z-(--z-toast) -translate-y-full rounded-md bg-foreground px-3 py-2 text-background text-sm focus-visible:translate-y-0"
+            href="#main"
+          >
+            Skip to content
+          </a>
+          <div className="grid min-h-svh grid-rows-[auto_1fr_auto]">
             <Header />
-            <main>{children}</main>
+            <main id="main">{children}</main>
+            <Footer />
           </div>
         </Providers>
       </body>

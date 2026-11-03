@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@gitflex/ui/components/badge";
 import { Button } from "@gitflex/ui/components/button";
 import {
   Card,
@@ -49,7 +50,7 @@ function describe(scan: ScanStatusView | null): string {
   if (scan.failed > 0) {
     parts.push(`${scan.failed} failed`);
   }
-  return parts.join(" · ");
+  return `${parts.join(", ")}.`;
 }
 
 export function ScanPanel({
@@ -108,9 +109,13 @@ export function ScanPanel({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
+        <CardTitle className="flex items-center gap-2">
           Analysis
-          {scan ? ` · ${STATUS_LABELS[scan.status] ?? scan.status}` : ""}
+          {scan ? (
+            <Badge variant={active ? "secondary" : "outline"}>
+              {STATUS_LABELS[scan.status] ?? scan.status}
+            </Badge>
+          ) : null}
         </CardTitle>
         <CardDescription>{describe(scan)}</CardDescription>
         <CardAction>

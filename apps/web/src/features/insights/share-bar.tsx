@@ -45,7 +45,7 @@ export function ShareBar({ slices: input }: { slices: ShareSlice[] }) {
               }
             />
             <TooltipContent>
-              {slice.name} · {share(slice.value)}
+              {slice.name}: {share(slice.value)}
             </TooltipContent>
           </Tooltip>
         ))}

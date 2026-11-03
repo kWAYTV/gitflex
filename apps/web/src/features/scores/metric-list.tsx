@@ -41,7 +41,7 @@ function RepositoryGroup({
   return (
     <div className="grid gap-1.5">
       <h4 className="text-muted-foreground text-xs">
-        {title} · {repositories.length}
+        {title} ({repositories.length})
       </h4>
       <ul className="flex flex-wrap gap-1.5">
         {repositories.slice(0, REPOSITORIES_PER_GROUP).map((repository) => (
@@ -113,7 +113,7 @@ function MetricRow({ metric }: { metric: MetricResult }) {
         nativeButton={false}
         render={<div />}
       >
-        <ChevronDown className="size-3.5 text-muted-foreground transition-transform group-data-panel-open:rotate-180" />
+        <ChevronDown className="size-3.5 text-muted-foreground transition-transform group-data-panel-open:rotate-180 motion-reduce:transition-none" />
         {header}
       </CollapsibleTrigger>
       <CollapsibleContent className="grid gap-3 px-3 pb-3 pl-10">
@@ -127,7 +127,7 @@ function MetricRow({ metric }: { metric: MetricResult }) {
 
 export function MetricList({ metrics }: { metrics: readonly MetricResult[] }) {
   return (
-    <ul className="divide-y border">
+    <ul className="divide-y overflow-hidden rounded-lg border">
       {metrics.map((metric) => (
         <li key={metric.id}>
           <MetricRow metric={metric} />
