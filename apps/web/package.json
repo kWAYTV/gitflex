@@ -3,16 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3001",
+    "auth:generate": "varlock run -- bun x auth@latest generate --config src/server/auth.ts --output ../../packages/db/src/schema/auth.ts --yes",
     "build": "next build",
     "check-types": "tsc --noEmit",
-    "start": "next start",
-    "env:generate": "varlock codegen"
+    "dev": "next dev --port 3001",
+    "env:generate": "varlock codegen",
+    "start": "next start --port 3001"
   },
   "dependencies": {
+    "@gitflex/auth": "workspace:*",
+    "@gitflex/db": "workspace:*",
     "@gitflex/ui": "workspace:*",
     "@swc/helpers": "^0.5.23",
-    "@tanstack/react-form": "^1.33.5",
     "@varlock/nextjs-integration": "1.2.5",
     "babel-plugin-react-compiler": "^1.0.0",
     "better-auth": "catalog:",

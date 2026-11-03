@@ -23,10 +23,6 @@
       "persistent": true,
       "passThroughEnv": ["*"]
     },
-    "db:push": {
-      "cache": false,
-      "interactive": true
-    },
     "db:generate": {
       "cache": false,
       "interactive": true
@@ -44,10 +40,13 @@
     "BETTER_AUTH_SECRET",
     "BETTER_AUTH_URL",
     "CI",
-    "CORS_ORIGIN",
     "DATABASE_URL",
-    "NEXT_PUBLIC_SERVER_URL",
+    "DATABASE_URL_UNPOOLED",
+    "GITHUB_CLIENT_ID",
+    "GITHUB_CLIENT_SECRET",
     "NODE_ENV",
+    "REDIS_URL",
+    "WORKER_HEALTH_PORT",
     "VERCEL",
     "VERCEL_ENV",
     "VERCEL_PROJECT_PRODUCTION_URL",

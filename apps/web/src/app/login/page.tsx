@@ -1,16 +1,23 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useState } from "react";
+import { GitHubSignInButton } from "@/components/github-sign-in-button";
+import { getSession } from "@/server/auth";
 
-import SignInForm from "@/components/sign-in-form";
-import SignUpForm from "@/components/sign-up-form";
+export default async function LoginPage() {
+  const session = await getSession();
 
-export default function LoginPage() {
-  const [showSignIn, setShowSignIn] = useState(false);
+  if (session) {
+    redirect("/dashboard");
+  }
 
-  return showSignIn ? (
-    <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
-  ) : (
-    <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />
+  return (
+    <div className="mx-auto mt-10 w-full max-w-sm p-6">
+      <h1 className="mb-2 font-bold text-2xl">Sign in to GitFlex</h1>
+      <p className="mb-6 text-muted-foreground text-sm">
+        We read your public GitHub profile and email. Repository access is
+        requested separately.
+      </p>
+      <GitHubSignInButton />
+    </div>
   );
 }

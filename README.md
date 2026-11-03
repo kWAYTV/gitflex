@@ -1,111 +1,97 @@
 # gitflex
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines Next.js, Hono, and more.
+Evidence-based developer profiles built from GitHub repositories. See [`.docs/spec.md`](.docs/spec.md) for the product and architecture specification.
 
-## Features
+## Stack
 
-- **TypeScript** - For type safety and improved developer experience
-- **Next.js** - Full-stack React framework
-- **TailwindCSS** - Utility-first CSS for rapid UI development
-- **Shared UI package** - shadcn/ui primitives live in `packages/ui`
-- **Hono** - Lightweight, performant server framework
-- **Bun** - Runtime environment
-- **Drizzle** - TypeScript-first ORM
-- **PostgreSQL** - Database engine
-- **Authentication** - Better-Auth
-- **Turborepo** - Optimized monorepo build system
+- **Bun** workspaces + **Turborepo**
+- **Next.js** (App Router) web app, including Better Auth route handlers and server actions
+- **Worker** — independent Bun process for background analysis (BullMQ)
+- **Better Auth** with GitHub OAuth, OAuth tokens encrypted at rest
+- **Drizzle ORM** + **PostgreSQL**, migrations only
+- **Redis** for queues
+- **Varlock** for typed, validated environment configuration
+- **Biome** via Ultracite for linting and formatting
+- **shadcn/ui** primitives in `packages/ui`
 
 ## Getting Started
-
-First, install the dependencies:
 
 ```bash
 bun install
 ```
 
-## Database Setup
+### Infrastructure
 
-This project uses PostgreSQL with Drizzle ORM.
-
-1. Make sure you have a PostgreSQL database set up.
-2. Update your `apps/server/.env` file with your PostgreSQL connection details.
-
-3. Apply the schema to your database:
+Use hosted Postgres/Redis, or start local ones:
 
 ```bash
-bun run db:push
+docker compose up -d
 ```
 
-Then, run the development server:
+### Environment
+
+Schemas (`.env.schema`) are committed; values live in git-ignored `.env` files next to them.
+
+| File | Variables |
+| --- | --- |
+| `.env` (root) | `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `REDIS_URL` |
+| `apps/web/.env` | `BETTER_AUTH_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` |
+
+Apps import shared values from the root schema with `@import(../../, pick=[...])`. Validate with `bunx varlock load` from the app directory.
+
+Create a GitHub OAuth app with the callback URL `http://localhost:3001/api/auth/callback/github`.
+
+### Database
+
+```bash
+bun run db:migrate
+```
+
+After changing the schema, run `bun run db:generate` and commit the generated migration. Migrations use `DATABASE_URL_UNPOOLED`.
+
+### Run
 
 ```bash
 bun run dev
 ```
 
-Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
-The API is running at [http://localhost:3000](http://localhost:3000).
-
-## UI Customization
-
-React web apps in this stack share shadcn/ui primitives through `packages/ui`.
-
-- Change design tokens and global styles in `packages/ui/src/styles/globals.css`
-- Update shared primitives in `packages/ui/src/components/*`
-- Adjust shadcn aliases or style config in `packages/ui/components.json` and `apps/web/components.json`
-
-### Add more shared components
-
-Run this from the project root to add more primitives to the shared UI package:
-
-```bash
-npx shadcn@latest add accordion dialog popover sheet table -c packages/ui
-```
-
-Import shared components like this:
-
-```tsx
-import { Button } from "@gitflex/ui/components/button";
-```
-
-### Add app-specific blocks
-
-If you want to add app-specific blocks instead of shared primitives, run the shadcn CLI from `apps/web`.
-
-## Environment Configuration
-
-Each app owns its environment schema in `.env.schema`. Varlock generates `src/env.ts` during installation; run `bun run env:generate` after changing a schema. Commit schemas, and keep secrets in ignored env files or your deployment platform.
-
-Import the generated `ENV` accessor in application code. Shared database and auth packages receive configuration or initialized clients from the application. See [Varlock's monorepo guide](https://varlock.dev/guides/monorepos/).
-
-Bun's automatic env loading is disabled in `bunfig.toml`; the framework integration or server bootstrap loads Varlock. Node deployments must include Varlock and its dependencies alongside the app schema.
-
-Run standalone Node/Bun tools that use Varlock from the owning app directory so they load that app's schema and env files. `env:generate` only generates TypeScript files; it does not initialize environment values in a subsequent command.
+- Web: [http://localhost:3001](http://localhost:3001)
+- Worker health: [http://localhost:3002/health](http://localhost:3002/health)
 
 ## Project Structure
 
 ```
 gitflex/
 ├── apps/
-│   ├── web/         # Frontend application (Next.js)
-│   └── server/      # Backend API (Hono)
+│   ├── web/         # Next.js app (UI, auth routes, server actions)
+│   └── worker/      # Background worker (queues, analysis)
 ├── packages/
-│   ├── ui/          # Shared shadcn/ui components and styles
-│   ├── auth/        # Authentication configuration & logic
-│   └── db/          # Database schema & queries
+│   ├── auth/        # Better Auth configuration
+│   ├── config/      # Shared TypeScript config
+│   ├── db/          # Drizzle schema, relations, migrations
+│   └── ui/          # Shared shadcn/ui components and styles
 ```
 
-## Available Scripts
+## Scripts
 
-- `bun run dev`: Start all applications in development mode
-- `bun run build`: Build all applications
-- `bun run dev:web`: Start only the web application
-- `bun run dev:server`: Start only the server
-- `bun run check-types`: Check TypeScript types across all apps
-- `bun run db:push`: Push schema changes to database
-- `bun run db:generate`: Generate database client/types
-- `bun run db:migrate`: Run database migrations
-- `bun run db:studio`: Open database studio UI
+- `bun run dev` — start web and worker
+- `bun run dev:web` / `bun run dev:worker` — start one app
+- `bun run build` — build all apps
+- `bun run check-types` — type-check all packages
+- `bun run check` / `bun run fix` — lint and format
+- `bun run db:generate` — generate a migration from schema changes
+- `bun run db:migrate` — apply migrations
+- `bun run db:studio` — open Drizzle Studio
+- `bun run auth:generate` — regenerate the Better Auth schema after changing auth options
 
-## Better Auth Schema Generation
+## UI
 
-After changing auth plugins or schema options, run `bun run auth:generate` from the project root. The script runs the Better Auth CLI through `varlock run` from the owning app directory, loading the auth instance from `src/services.ts`. Review the schema changes, then use your ORM's migration workflow to apply them.
+Shared primitives live in `packages/ui`. Add more with:
+
+```bash
+npx shadcn@latest add dialog table -c packages/ui
+```
+
+```tsx
+import { Button } from "@gitflex/ui/components/button";
+```

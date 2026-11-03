@@ -1,0 +1,26 @@
+{
+  "name": "worker",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsdown",
+    "check-types": "tsc --noEmit",
+    "dev": "bun run --watch src/index.ts",
+    "env:generate": "varlock codegen",
+    "start": "bun run dist/index.mjs"
+  },
+  "dependencies": {
+    "@gitflex/db": "workspace:*",
+    "ioredis": "^6.0.0",
+    "pino": "^10.4.0",
+    "varlock": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@gitflex/config": "workspace:*",
+    "@types/bun": "catalog:",
+    "tsdown": "^0.23.0",
+    "typescript": "catalog:"
+  }
+}

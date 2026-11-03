@@ -1,37 +1,52 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import type { Database } from "@gitflex/db";
-import * as schema from "@gitflex/db/schema/auth";
-import { betterAuth } from "better-auth";
+import { account, session, user, verification } from "@gitflex/db/schema/auth";
+import { type BetterAuthPlugin, betterAuth } from "better-auth";
 
-export type AuthConfig = {
-  BETTER_AUTH_URL: string;
+export interface AuthConfig {
   BETTER_AUTH_SECRET: string;
-  CORS_ORIGIN: string;
-};
+  BETTER_AUTH_URL: string;
+  GITHUB_CLIENT_ID: string;
+  GITHUB_CLIENT_SECRET: string;
+}
 
 export function createAuth(
   env: AuthConfig,
   database: Database,
-  desktopOrigins: readonly string[] = [],
+  plugins: BetterAuthPlugin[] = []
 ) {
   return betterAuth({
+    account: {
+      encryptOAuthTokens: true,
+    },
+    baseURL: env.BETTER_AUTH_URL,
     database: drizzleAdapter(database, {
       provider: "pg",
-      schema,
+      schema: { account, session, user, verification },
     }),
-    trustedOrigins: [env.CORS_ORIGIN, ...desktopOrigins],
-    emailAndPassword: { enabled: true },
+    plugins,
     secret: env.BETTER_AUTH_SECRET,
-    baseURL: env.BETTER_AUTH_URL,
-    advanced: {
-      defaultCookieAttributes: {
-        sameSite: "none",
-        secure: true,
-        httpOnly: true,
+    socialProviders: {
+      github: {
+        clientId: env.GITHUB_CLIENT_ID,
+        clientSecret: env.GITHUB_CLIENT_SECRET,
+        mapProfileToUser: (profile) => ({ username: profile.login }),
+        overrideUserInfoOnSignIn: true,
       },
     },
-    plugins: [],
+    trustedOrigins: [env.BETTER_AUTH_URL],
+    user: {
+      additionalFields: {
+        username: {
+          input: false,
+          required: true,
+          type: "string",
+          unique: true,
+        },
+      },
+    },
   });
 }
 
-export type Session = ReturnType<typeof createAuth>["$Infer"]["Session"];
+export type Auth = ReturnType<typeof createAuth>;
+export type Session = Auth["$Infer"]["Session"];
