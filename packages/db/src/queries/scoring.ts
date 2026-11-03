@@ -1,5 +1,5 @@
 import type { ProfileScore, ScoringRepository } from "@gitflex/scoring/types";
-import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, lte } from "drizzle-orm";
 
 import {
   language,
@@ -14,12 +14,17 @@ import {
   profileSnapshot,
   score,
 } from "../schema/scoring";
+import type { RepositoryScope } from "./insights";
 import type { Executor } from "./repositories";
 
-/** Included repositories with metadata and the evidence from each one's latest completed scan. */
+/**
+ * Included repositories (within `scope`) with metadata and the evidence from each one's
+ * latest completed scan; with `asOf`, the latest completed by then, so a stored snapshot can be reproduced.
+ */
 export async function loadScoringRepositories(
   executor: Executor,
-  userId: string
+  userId: string,
+  { asOf, scope = "included" }: { asOf?: Date; scope?: RepositoryScope } = {}
 ): Promise<ScoringRepository[]> {
   const [repositories, scans] = await Promise.all([
     executor
@@ -44,7 +49,8 @@ export async function loadScoringRepositories(
         and(
           eq(repositorySelection.userId, userId),
           eq(repositorySelection.included, true),
-          isNull(repositorySelection.removedAt)
+          isNull(repositorySelection.removedAt),
+          scope === "public" ? eq(repository.visibility, "public") : undefined
         )
       ),
     executor
@@ -63,11 +69,20 @@ export async function loadScoringRepositories(
           isNull(repositorySelection.removedAt)
         )
       )
-      .where(eq(repositoryScan.status, "completed"))
+      .where(
+        and(
+          eq(repositoryScan.status, "completed"),
+          asOf ? lte(repositoryScan.completedAt, asOf) : undefined
+        )
+      )
       .orderBy(repositoryScan.repositoryId, desc(repositoryScan.completedAt)),
   ]);
 
-  const scanIds = scans.map((entry) => entry.id);
+  const repositoryIds = new Set(repositories.map((row) => row.id));
+  const scopedScans = scans.filter((entry) =>
+    repositoryIds.has(entry.repositoryId)
+  );
+  const scanIds = scopedScans.map((entry) => entry.id);
   const [technologies, languages, dependencies] =
     scanIds.length === 0
       ? [[], [], []]
@@ -100,7 +115,7 @@ export async function loadScoringRepositories(
         ]);
 
   const scanByRepository = new Map(
-    scans.map((entry) => [entry.repositoryId, entry])
+    scopedScans.map((entry) => [entry.repositoryId, entry])
   );
   const technologiesByScan = Map.groupBy(
     technologies,

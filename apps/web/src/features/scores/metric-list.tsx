@@ -27,10 +27,25 @@ const ASSESSMENT_VARIANTS = {
   unknown: "ghost",
 } as const;
 
+export type RepositoryLinks = "dashboard" | "github";
+
+function repositoryLink(
+  links: RepositoryLinks,
+  repository: RepositoryEvidence
+): Route {
+  return (
+    links === "github"
+      ? `https://github.com/${repository.fullName}`
+      : `/dashboard/repositories/${repository.repositoryId}`
+  ) as Route;
+}
+
 function RepositoryGroup({
+  links,
   repositories,
   title,
 }: {
+  links: RepositoryLinks;
   repositories: readonly RepositoryEvidence[];
   title: string;
 }) {
@@ -47,13 +62,7 @@ function RepositoryGroup({
         {repositories.slice(0, REPOSITORIES_PER_GROUP).map((repository) => (
           <li key={repository.repositoryId}>
             <Badge
-              render={
-                <Link
-                  href={
-                    `/dashboard/repositories/${repository.repositoryId}` as Route
-                  }
-                />
-              }
+              render={<Link href={repositoryLink(links, repository)} />}
               variant="outline"
             >
               {repository.fullName.split("/").at(-1)}
@@ -70,7 +79,13 @@ function RepositoryGroup({
   );
 }
 
-function MetricRow({ metric }: { metric: MetricResult }) {
+function MetricRow({
+  links,
+  metric,
+}: {
+  links: RepositoryLinks;
+  metric: MetricResult;
+}) {
   const meets = metric.repositories.filter((entry) => entry.value >= 0.5);
   const missing = metric.repositories.filter((entry) => entry.value < 0.5);
   const header = (
@@ -118,19 +133,25 @@ function MetricRow({ metric }: { metric: MetricResult }) {
       </CollapsibleTrigger>
       <CollapsibleContent className="grid gap-3 px-3 pb-3 pl-10">
         <p className="text-muted-foreground text-xs">{metric.description}</p>
-        <RepositoryGroup repositories={meets} title="Meets" />
-        <RepositoryGroup repositories={missing} title="Missing" />
+        <RepositoryGroup links={links} repositories={meets} title="Meets" />
+        <RepositoryGroup links={links} repositories={missing} title="Missing" />
       </CollapsibleContent>
     </Collapsible>
   );
 }
 
-export function MetricList({ metrics }: { metrics: readonly MetricResult[] }) {
+export function MetricList({
+  links = "dashboard",
+  metrics,
+}: {
+  links?: RepositoryLinks;
+  metrics: readonly MetricResult[];
+}) {
   return (
     <ul className="divide-y overflow-hidden rounded-lg border">
       {metrics.map((metric) => (
         <li key={metric.id}>
-          <MetricRow metric={metric} />
+          <MetricRow links={links} metric={metric} />
         </li>
       ))}
     </ul>

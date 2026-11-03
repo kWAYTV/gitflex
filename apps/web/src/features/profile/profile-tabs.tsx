@@ -5,24 +5,16 @@ import type { Route } from "next";
 import Link from "next/link";
 import { useSelectedLayoutSegment } from "next/navigation";
 
-const TABS: { href: Route; label: string; value: string }[] = [
-  { href: "/dashboard", label: "Overview", value: "overview" },
-  { href: "/dashboard/score", label: "Score", value: "score" },
-  { href: "/dashboard/languages", label: "Languages", value: "languages" },
-  {
-    href: "/dashboard/technologies",
-    label: "Technologies",
-    value: "technologies",
-  },
-  {
-    href: "/dashboard/repositories",
-    label: "Repositories",
-    value: "repositories",
-  },
+const TABS: { label: string; segment: string | null; value: string }[] = [
+  { label: "Overview", segment: null, value: "overview" },
+  { label: "Score", segment: "score", value: "score" },
+  { label: "Languages", segment: "languages", value: "languages" },
+  { label: "Technologies", segment: "technologies", value: "technologies" },
+  { label: "Repositories", segment: "repositories", value: "repositories" },
 ];
 
 /** Route-backed tabs: each tab is a layout segment, so the active tab survives reloads and links. */
-export function ProfileTabs() {
+export function ProfileTabs({ basePath }: { basePath: string }) {
   const segment = useSelectedLayoutSegment() ?? "overview";
 
   return (
@@ -32,7 +24,15 @@ export function ProfileTabs() {
           <TabsTrigger
             key={tab.value}
             nativeButton={false}
-            render={<Link href={tab.href} />}
+            render={
+              <Link
+                href={
+                  (tab.segment
+                    ? `${basePath}/${tab.segment}`
+                    : basePath) as Route
+                }
+              />
+            }
             value={tab.value}
           >
             {tab.label}

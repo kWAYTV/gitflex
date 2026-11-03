@@ -43,7 +43,7 @@ export default async function DashboardLayout({
             </a>
           </div>
         </div>
-        <ProfileTabs />
+        <ProfileTabs basePath="/dashboard" />
       </header>
       {children}
     </div>

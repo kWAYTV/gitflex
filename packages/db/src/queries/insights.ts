@@ -13,8 +13,18 @@ import {
 import { repository, repositorySelection } from "../schema/repositories";
 import type { Executor } from "./repositories";
 
-/** Latest completed repository scan for each repository the user currently includes. */
-export function latestUserScans(executor: Executor, userId: string) {
+/**
+ * Which included repositories a query may read: everything the owner included, or
+ * only public ones. Public profiles must use "public"; the filter lives here, not in the UI.
+ */
+export type RepositoryScope = "included" | "public";
+
+/** Latest completed repository scan for each repository the user currently includes, within `scope`. */
+export function latestUserScans(
+  executor: Executor,
+  userId: string,
+  scope: RepositoryScope = "included"
+) {
   return executor
     .selectDistinctOn([repositoryScan.repositoryId], {
       id: repositoryScan.id,
@@ -30,7 +40,13 @@ export function latestUserScans(executor: Executor, userId: string) {
         isNull(repositorySelection.removedAt)
       )
     )
-    .where(eq(repositoryScan.status, "completed"))
+    .innerJoin(repository, eq(repository.id, repositoryScan.repositoryId))
+    .where(
+      and(
+        eq(repositoryScan.status, "completed"),
+        scope === "public" ? eq(repository.visibility, "public") : undefined
+      )
+    )
     .orderBy(repositoryScan.repositoryId, desc(repositoryScan.completedAt))
     .as("latest");
 }
@@ -50,9 +66,10 @@ const SIGNIFICANT_LANGUAGE_PERCENTAGE = 10;
 
 export async function getUserLanguageOverview(
   executor: Executor,
-  userId: string
+  userId: string,
+  scope: RepositoryScope = "included"
 ): Promise<LanguageOverview[]> {
-  const latest = latestUserScans(executor, userId);
+  const latest = latestUserScans(executor, userId, scope);
   const rows = await executor
     .select({
       bytes: sum(repositoryLanguage.bytes),
@@ -251,9 +268,10 @@ export interface RepositoryTechnologyRow {
 /** Technology detections from each included repository's latest completed scan. */
 export function listUserRepositoryTechnologies(
   executor: Executor,
-  userId: string
+  userId: string,
+  scope: RepositoryScope = "included"
 ): Promise<RepositoryTechnologyRow[]> {
-  const latest = latestUserScans(executor, userId);
+  const latest = latestUserScans(executor, userId, scope);
   return executor
     .select({
       confidence: repositoryTechnology.confidence,
@@ -278,9 +296,10 @@ export interface RepositoryLanguageRow {
 /** Programming languages from each included repository's latest completed scan. */
 export function listUserRepositoryLanguages(
   executor: Executor,
-  userId: string
+  userId: string,
+  scope: RepositoryScope = "included"
 ): Promise<RepositoryLanguageRow[]> {
-  const latest = latestUserScans(executor, userId);
+  const latest = latestUserScans(executor, userId, scope);
   return executor
     .select({
       color: language.color,
@@ -348,9 +367,10 @@ export interface TechnologyUsage {
 export async function getUserTechnologyUsage(
   executor: Executor,
   userId: string,
-  technologyId: string
+  technologyId: string,
+  scope: RepositoryScope = "included"
 ): Promise<TechnologyUsage[]> {
-  const latest = latestUserScans(executor, userId);
+  const latest = latestUserScans(executor, userId, scope);
   const rows = await executor
     .select({
       confidence: repositoryTechnology.confidence,
