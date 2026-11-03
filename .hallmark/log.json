@@ -1,0 +1,27 @@
+[
+ {
+  "shape": "feature-stack",
+  "theme": "brand-caffeine",
+  "axes": "neutral/grotesque/roast",
+  "hero": "stage",
+  "nav": "slab",
+  "footer": "letter-close",
+  "imagery": "product",
+  "photos": [],
+  "entry": "redesign",
+  "fingerprint": "caffeine-geist-evidence",
+  "sections": [
+   "hero",
+   "feature-stack",
+   "close"
+  ],
+  "signature": "evidence trail",
+  "waived": [
+   "77 section count: redesign adds no content",
+   "58 hero copy kept verbatim"
+  ],
+  "prompt": "redesign the whole site",
+  "date": "2026-11-03",
+  "mode": "build"
+ }
+]
