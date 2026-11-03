@@ -1,25 +1,5 @@
 import type { LanguageOverview } from "@gitflex/db/queries/insights";
 
-/** Linguist types these as "programming", but they describe builds rather than application code. */
-const BUILD_LANGUAGES = new Set([
-  "batchfile",
-  "cmake",
-  "dockerfile",
-  "just",
-  "makefile",
-  "meson",
-  "nix",
-  "starlark",
-  "xmake",
-]);
-
-export function isApplicationLanguage(language: {
-  id: string;
-  type: string;
-}): boolean {
-  return language.type === "programming" && !BUILD_LANGUAGES.has(language.id);
-}
-
 export type LanguageWeighting = "bytes" | "repositories";
 
 export function languageWeight(

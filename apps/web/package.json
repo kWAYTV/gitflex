@@ -17,6 +17,7 @@
     "@gitflex/core": "workspace:*",
     "@gitflex/db": "workspace:*",
     "@gitflex/queue": "workspace:*",
+    "@gitflex/scoring": "workspace:*",
     "@gitflex/shared": "workspace:*",
     "@gitflex/technologies": "workspace:*",
     "@gitflex/ui": "workspace:*",

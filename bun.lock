@@ -25,6 +25,7 @@
         "@gitflex/core": "workspace:*",
         "@gitflex/db": "workspace:*",
         "@gitflex/queue": "workspace:*",
+        "@gitflex/scoring": "workspace:*",
         "@gitflex/shared": "workspace:*",
         "@gitflex/technologies": "workspace:*",
         "@gitflex/ui": "workspace:*",
@@ -117,6 +118,7 @@
         "@gitflex/analyzer": "workspace:*",
         "@gitflex/db": "workspace:*",
         "@gitflex/github": "workspace:*",
+        "@gitflex/scoring": "workspace:*",
         "@gitflex/shared": "workspace:*",
         "@gitflex/technologies": "workspace:*",
       },
@@ -129,6 +131,7 @@
     "packages/db": {
       "name": "@gitflex/db",
       "dependencies": {
+        "@gitflex/scoring": "workspace:*",
         "drizzle-orm": "catalog:",
         "pg": "^8.23.0",
         "zod": "catalog:",
@@ -164,6 +167,17 @@
         "bullmq": "^6.5.4",
         "ioredis": "^6.0.0",
         "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@gitflex/config": "workspace:*",
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
+    "packages/scoring": {
+      "name": "@gitflex/scoring",
+      "dependencies": {
+        "@gitflex/technologies": "workspace:*",
       },
       "devDependencies": {
         "@gitflex/config": "workspace:*",
@@ -365,6 +379,8 @@
     "@gitflex/github": ["@gitflex/github@workspace:packages/github"],
 
     "@gitflex/queue": ["@gitflex/queue@workspace:packages/queue"],
+
+    "@gitflex/scoring": ["@gitflex/scoring@workspace:packages/scoring"],
 
     "@gitflex/shared": ["@gitflex/shared@workspace:packages/shared"],
 

@@ -1601,6 +1601,21 @@ Unknown:
 
 Provide links to relevant repositories.
 
+## 8.13 Implementation decisions
+
+Metric definitions live in `packages/scoring/src/metrics.ts`; each has a description, weight and unknown reason that the UI shows verbatim.
+
+- Population: non-fork repositories. Code-quality metrics use analyzed repositories with at least one source file.
+- Coverage metrics are size-weighted shares: each repository weighs `1 + log10(1 + sizeKb)`, so many tiny experiments cannot outweigh a substantial project.
+- Repository signals (README, license, tests, lockfiles, security policy, release automation, source layout) come from file paths only, recorded by analyzer 0.2.0 in `repository_scan.summary.signals`.
+- Technologies below 0.6 confidence count as absent.
+- Metrics without evidence (security findings, complexity, error handling, pull requests, reviews, external contributors) are `unknown`: excluded from the score, counted as zero confidence.
+- Dimension and overall scores are means weighted by `weight × confidence`, so thin or proxy evidence moves a score less than strong evidence. Proxy metrics (repository activity standing in for authored commits) cap confidence at 0.5.
+- Popularity uses the mean of the top five repositories, each log-scaled to a cap, so one viral repository contributes at most a fifth.
+- Assessment: Strength at 70 and above, Gap below 40, otherwise Partial.
+- `profile_snapshot` stores the full breakdown as JSONB plus one `score` row per dimension; snapshots are unique per scan and scoring version and never updated. Per-repository evidence lives in the breakdown rather than a `score_evidence` table until a query needs it.
+- Recency is measured against the scan completion time, never the wall clock, so rescoring the same scan is reproducible.
+
 ---
 
 # 9. BACKGROUND JOB SYSTEM

@@ -4,7 +4,7 @@ import type {
   RepositoryTechnologyRow,
 } from "@gitflex/db/queries/insights";
 
-import { isApplicationLanguage } from "@/features/insights/languages";
+import { isApplicationLanguage } from "@gitflex/technologies/languages";
 
 export type AnalysisStatus =
   | "analyzed"

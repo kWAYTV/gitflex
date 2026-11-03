@@ -68,7 +68,7 @@ export interface PracticeObservation {
   practice: Practice;
 }
 
-function implies(practice: Practice, technologyId: string): boolean {
+export function implies(practice: Practice, technologyId: string): boolean {
   const { categories, technologies } = practice.impliedBy;
   if (technologies?.includes(technologyId)) {
     return true;

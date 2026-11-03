@@ -39,6 +39,7 @@ export function toSummary(analysis: RepositoryAnalysis): RepositoryScanSummary {
   for (const [name, stage] of [
     ["languages", analysis.languages],
     ["manifests", analysis.manifests],
+    ["signals", analysis.signals],
     ["technologies", analysis.technologies],
   ] as const) {
     stages[name] =
@@ -54,6 +55,7 @@ export function toSummary(analysis: RepositoryAnalysis): RepositoryScanSummary {
       truncated: analysis.files.truncated,
     },
     manifests: analysis.manifests.data?.manifests ?? [],
+    signals: analysis.signals.data ?? undefined,
     stages,
   };
 }

@@ -5,6 +5,8 @@ import {
   listUserRepositoryTechnologies,
 } from "@gitflex/db/queries/insights";
 import { listUserRepositories } from "@gitflex/db/queries/repositories";
+import { findLatestProfileSnapshot } from "@gitflex/db/queries/scoring";
+import { isApplicationLanguage } from "@gitflex/technologies/languages";
 import { derivePractices } from "@gitflex/technologies/practices";
 import { Badge } from "@gitflex/ui/components/badge";
 import {
@@ -18,10 +20,8 @@ import {
 import type { Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-
 import { categoryLabel } from "@/features/insights/confidence";
 import { DomainShareBar } from "@/features/insights/domain-share";
-import { isApplicationLanguage } from "@/features/insights/languages";
 import { ShareBar } from "@/features/insights/share-bar";
 import {
   domainShares,
@@ -29,6 +29,7 @@ import {
 } from "@/features/insights/technologies";
 import type { ScanStatusView } from "@/features/scans/actions";
 import { ScanPanel } from "@/features/scans/scan-panel";
+import { ScoreSummary } from "@/features/scores/score-summary";
 import { db, getSession } from "@/server/auth";
 
 const TOP_DOMAINS = 4;
@@ -63,13 +64,14 @@ export default async function DashboardPage() {
   }
 
   const userId = session.user.id;
-  const [scan, repositories, states, technologyRows, languages] =
+  const [scan, repositories, states, technologyRows, languages, snapshot] =
     await Promise.all([
       findLatestScan(db, userId),
       listUserRepositories(db, userId),
       listRepositoryAnalysisStates(db, userId),
       listUserRepositoryTechnologies(db, userId),
       getUserLanguageOverview(db, userId),
+      findLatestProfileSnapshot(db, userId),
     ]);
 
   const scanView: ScanStatusView | null = scan
@@ -106,6 +108,13 @@ export default async function DashboardPage() {
         <Stat label="Technologies" value={summaries.length} />
         <Stat label="Languages" value={applicationLanguages.length} />
       </div>
+
+      {snapshot ? (
+        <ScoreSummary
+          action={<SeeAll href="/dashboard/score" />}
+          score={snapshot.breakdown}
+        />
+      ) : null}
 
       {applicationLanguages.length > 0 ? (
         <Card>

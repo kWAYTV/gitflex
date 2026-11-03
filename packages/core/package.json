@@ -12,6 +12,7 @@
     "@gitflex/analyzer": "workspace:*",
     "@gitflex/db": "workspace:*",
     "@gitflex/github": "workspace:*",
+    "@gitflex/scoring": "workspace:*",
     "@gitflex/shared": "workspace:*",
     "@gitflex/technologies": "workspace:*"
   },

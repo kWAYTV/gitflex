@@ -7,6 +7,7 @@ import { useSelectedLayoutSegment } from "next/navigation";
 
 const TABS: { href: Route; label: string; value: string }[] = [
   { href: "/dashboard", label: "Overview", value: "overview" },
+  { href: "/dashboard/score", label: "Score", value: "score" },
   { href: "/dashboard/languages", label: "Languages", value: "languages" },
   {
     href: "/dashboard/technologies",

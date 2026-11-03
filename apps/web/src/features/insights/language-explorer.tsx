@@ -1,6 +1,7 @@
 "use client";
 
 import type { LanguageOverview } from "@gitflex/db/queries/insights";
+import { isApplicationLanguage } from "@gitflex/technologies/languages";
 import {
   Table,
   TableBody,
@@ -16,7 +17,6 @@ import {
 import { useCallback, useMemo, useState } from "react";
 import {
   formatBytes,
-  isApplicationLanguage,
   type LanguageWeighting,
   languageWeight,
 } from "./languages";

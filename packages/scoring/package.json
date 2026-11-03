@@ -1,0 +1,19 @@
+{
+  "name": "@gitflex/scoring",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@gitflex/technologies": "workspace:*"
+  },
+  "devDependencies": {
+    "@gitflex/config": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}

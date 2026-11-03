@@ -1,0 +1,713 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "3d746269-be89-446a-a5ad-5b96f89b99c2",
+  "prevIds": ["d1e13e08-82fb-4f96-aba2-374a1dcd179f"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "profile_snapshot"],
+      "writes": [
+        "s|tbl|public.profile_snapshot",
+        "n|tbl|public.profile_snapshot",
+        "e|tbl|public.profile_snapshot",
+        "n|rel|public.profile_snapshot",
+        "n|type|public.profile_snapshot",
+        "n|rel|public.profile_snapshot_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "score"],
+      "writes": [
+        "s|tbl|public.score",
+        "n|tbl|public.score",
+        "e|tbl|public.score",
+        "n|rel|public.score",
+        "n|type|public.score",
+        "n|rel|public.score_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "profile_snapshot",
+        "profile_snapshot_scan_version_idx"
+      ],
+      "writes": [
+        "s|idx|public.profile_snapshot_scan_version_idx",
+        "n|idx|public.profile_snapshot_scan_version_idx",
+        "e|idx|public.profile_snapshot_scan_version_idx",
+        "n|rel|public.profile_snapshot_scan_version_idx"
+      ],
+      "reads": [
+        "n|tbl|public.profile_snapshot",
+        "n|sch|public",
+        "n|col|public.profile_snapshot.scan_id",
+        "n|col|public.profile_snapshot.scoring_version"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "profile_snapshot",
+        "profile_snapshot_user_created_idx"
+      ],
+      "writes": [
+        "s|idx|public.profile_snapshot_user_created_idx",
+        "n|idx|public.profile_snapshot_user_created_idx",
+        "e|idx|public.profile_snapshot_user_created_idx",
+        "n|rel|public.profile_snapshot_user_created_idx"
+      ],
+      "reads": [
+        "n|tbl|public.profile_snapshot",
+        "n|sch|public",
+        "n|col|public.profile_snapshot.user_id",
+        "n|col|public.profile_snapshot.created_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "score",
+        "score_snapshot_dimension_idx"
+      ],
+      "writes": [
+        "s|idx|public.score_snapshot_dimension_idx",
+        "n|idx|public.score_snapshot_dimension_idx",
+        "e|idx|public.score_snapshot_dimension_idx",
+        "n|rel|public.score_snapshot_dimension_idx"
+      ],
+      "reads": [
+        "n|tbl|public.score",
+        "n|sch|public",
+        "n|col|public.score.snapshot_id",
+        "n|col|public.score.dimension"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "score",
+        "score_user_dimension_idx"
+      ],
+      "writes": [
+        "s|idx|public.score_user_dimension_idx",
+        "n|idx|public.score_user_dimension_idx",
+        "e|idx|public.score_user_dimension_idx",
+        "n|rel|public.score_user_dimension_idx"
+      ],
+      "reads": [
+        "n|tbl|public.score",
+        "n|sch|public",
+        "n|col|public.score.user_id",
+        "n|col|public.score.dimension"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "profile_snapshot"],
+      "writes": [
+        "s|fk|public.profile_snapshot.profile_snapshot_scan_id_scan_id_fkey",
+        "n|fk|public.profile_snapshot.profile_snapshot_scan_id_scan_id_fkey",
+        "e|fk|public.profile_snapshot.profile_snapshot_scan_id_scan_id_fkey",
+        "n|con|public.profile_snapshot.profile_snapshot_scan_id_scan_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.profile_snapshot",
+        "n|sch|public",
+        "n|tbl|public.scan",
+        "n|sch|public",
+        "n|col|public.profile_snapshot.scan_id",
+        "n|col|public.scan.id",
+        "e|uniqueness|public.scan.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "profile_snapshot"],
+      "writes": [
+        "s|fk|public.profile_snapshot.profile_snapshot_user_id_user_id_fkey",
+        "n|fk|public.profile_snapshot.profile_snapshot_user_id_user_id_fkey",
+        "e|fk|public.profile_snapshot.profile_snapshot_user_id_user_id_fkey",
+        "n|con|public.profile_snapshot.profile_snapshot_user_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.profile_snapshot",
+        "n|sch|public",
+        "n|tbl|public.user",
+        "n|sch|public",
+        "n|col|public.profile_snapshot.user_id",
+        "n|col|public.user.id",
+        "e|uniqueness|public.user.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "score"],
+      "writes": [
+        "s|fk|public.score.score_snapshot_id_profile_snapshot_id_fkey",
+        "n|fk|public.score.score_snapshot_id_profile_snapshot_id_fkey",
+        "e|fk|public.score.score_snapshot_id_profile_snapshot_id_fkey",
+        "n|con|public.score.score_snapshot_id_profile_snapshot_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.score",
+        "n|sch|public",
+        "n|tbl|public.profile_snapshot",
+        "n|sch|public",
+        "n|col|public.score.snapshot_id",
+        "n|col|public.profile_snapshot.id",
+        "e|uniqueness|public.profile_snapshot.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "score"],
+      "writes": [
+        "s|fk|public.score.score_user_id_user_id_fkey",
+        "n|fk|public.score.score_user_id_user_id_fkey",
+        "e|fk|public.score.score_user_id_user_id_fkey",
+        "n|con|public.score.score_user_id_user_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.score",
+        "n|sch|public",
+        "n|tbl|public.user",
+        "n|sch|public",
+        "n|col|public.score.user_id",
+        "n|col|public.user.id",
+        "e|uniqueness|public.user.id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "profile_snapshot",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "score",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "profile_snapshot",
+        "name": "analyzer_version",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "profile_snapshot",
+        "name": "breakdown",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "profile_snapshot",
+        "name": "confidence",
+        "type": "real",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "profile_snapshot",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "profile_snapshot",
+        "name": "grade",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "profile_snapshot",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "gen_random_uuid()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "profile_snapshot",
+        "name": "overall_score",
+        "type": "real",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "profile_snapshot",
+        "name": "scan_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "profile_snapshot",
+        "name": "scoring_version",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "profile_snapshot",
+        "name": "user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "score",
+        "name": "calculated_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "score",
+        "name": "confidence",
+        "type": "real",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "score",
+        "name": "dimension",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "score",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "gen_random_uuid()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "score",
+        "name": "score",
+        "type": "real",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "score",
+        "name": "scoring_version",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "score",
+        "name": "snapshot_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "score",
+        "name": "user_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "profile_snapshot",
+        "name": "profile_snapshot_scan_version_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "scan_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "scoring_version",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "profile_snapshot",
+        "name": "profile_snapshot_user_created_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "created_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "score",
+        "name": "score_snapshot_dimension_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "snapshot_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "dimension",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "score",
+        "name": "score_user_dimension_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "dimension",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "profile_snapshot",
+        "name": "profile_snapshot_scan_id_scan_id_fkey",
+        "nameExplicit": false,
+        "columns": ["scan_id"],
+        "schemaTo": "public",
+        "tableTo": "scan",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "profile_snapshot",
+        "name": "profile_snapshot_user_id_user_id_fkey",
+        "nameExplicit": false,
+        "columns": ["user_id"],
+        "schemaTo": "public",
+        "tableTo": "user",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "score",
+        "name": "score_snapshot_id_profile_snapshot_id_fkey",
+        "nameExplicit": false,
+        "columns": ["snapshot_id"],
+        "schemaTo": "public",
+        "tableTo": "profile_snapshot",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "score",
+        "name": "score_user_id_user_id_fkey",
+        "nameExplicit": false,
+        "columns": ["user_id"],
+        "schemaTo": "public",
+        "tableTo": "user",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "profile_snapshot",
+        "name": "profile_snapshot_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "score",
+        "name": "score_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    }
+  ]
+}

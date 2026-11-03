@@ -12,6 +12,7 @@ import {
   type ManifestAnalysis,
   type ManifestLimits,
 } from "./manifests/analyze-manifests";
+import { detectSignals, type RepositorySignals } from "./signals/signals";
 import type { RepositoryFile, RepositorySnapshot } from "./snapshot";
 import { ANALYZER_VERSION } from "./version";
 
@@ -39,6 +40,7 @@ export interface RepositoryAnalysis {
   languages: StageResult<LanguageAnalysis>;
   manifests: StageResult<ManifestAnalysis>;
   registryVersion: string;
+  signals: StageResult<RepositorySignals>;
   technologies: StageResult<DetectedTechnology[]>;
 }
 
@@ -91,14 +93,18 @@ export async function analyzeRepository(
     ),
   ]);
 
+  const analyzedPaths = analyzed.map((file) => file.path);
   // File-based rules still apply when manifests could not be read.
-  const technologies = await runStage(() =>
-    detectTechnologies({
-      dependencies: manifests.data?.dependencies ?? [],
-      paths: analyzed.map((file) => file.path),
-      weights: options.weights,
-    })
-  );
+  const [technologies, signals] = await Promise.all([
+    runStage(() =>
+      detectTechnologies({
+        dependencies: manifests.data?.dependencies ?? [],
+        paths: analyzedPaths,
+        weights: options.weights,
+      })
+    ),
+    runStage(() => detectSignals(analyzedPaths)),
+  ]);
 
   return {
     analyzedAt: options.now ?? new Date(),
@@ -112,6 +118,7 @@ export async function analyzeRepository(
     languages,
     manifests,
     registryVersion: REGISTRY_VERSION,
+    signals,
     technologies,
   };
 }

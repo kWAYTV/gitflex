@@ -22,6 +22,7 @@ import { getRepositoryHead } from "@gitflex/github/contents";
 import { AppError, isAppError } from "@gitflex/shared/errors";
 import { REGISTRY_VERSION } from "@gitflex/technologies/registry";
 
+import { createProfileSnapshot } from "../scoring/snapshot";
 import {
   allStagesCompleted,
   languageRows,
@@ -219,6 +220,9 @@ export async function executeScan(
     throw new AppError("NOT_FOUND", `Scan ${scanId} does not exist.`);
   }
   if (scan.status !== "queued" && scan.status !== "running") {
+    if (scan.status === "completed" || scan.status === "partial") {
+      await createProfileSnapshot(db, scanId);
+    }
     return {
       completed: scan.completedRepositories,
       failed: scan.failedRepositories,
@@ -304,6 +308,9 @@ export async function executeScan(
     skippedRepositories: counts.skipped,
     status,
   });
+  if (status !== "failed") {
+    await createProfileSnapshot(db, scanId);
+  }
   return { ...counts, scanId, status };
 }
 

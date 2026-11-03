@@ -95,7 +95,24 @@ export interface RepositoryScanSummary {
     status: string;
     type: string;
   }[];
+  /** Absent for scans recorded before analyzer 0.2.0. */
+  signals?: RepositoryScanSignals;
   stages: Record<string, StageSummary>;
+}
+
+export interface RepositoryScanSignals {
+  changelog: boolean;
+  codeowners: boolean;
+  contributing: boolean;
+  docsDirectory: boolean;
+  licenseFile: boolean;
+  lockfiles: string[];
+  readme: boolean;
+  releaseAutomation: boolean;
+  securityPolicy: boolean;
+  sourceFiles: number;
+  structuredSourceFiles: number;
+  testFiles: number;
 }
 
 export const repositoryScan = pgTable(

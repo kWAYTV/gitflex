@@ -14,7 +14,7 @@ import { repository, repositorySelection } from "../schema/repositories";
 import type { Executor } from "./repositories";
 
 /** Latest completed repository scan for each repository the user currently includes. */
-function latestUserScans(executor: Executor, userId: string) {
+export function latestUserScans(executor: Executor, userId: string) {
   return executor
     .selectDistinctOn([repositoryScan.repositoryId], {
       id: repositoryScan.id,
