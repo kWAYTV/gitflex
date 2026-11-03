@@ -38,7 +38,8 @@
     "dev:worker": "turbo run dev -F worker --",
     "env:generate": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/worker/ && varlock codegen --path ./packages/db/",
     "fix": "ultracite fix",
-    "postinstall": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/worker/ && varlock codegen --path ./packages/db/"
+    "postinstall": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/worker/ && varlock codegen --path ./packages/db/",
+    "test": "turbo run test"
   },
   "overrides": {
     "@next/env": "npm:@varlock/nextjs-integration@1.2.2"

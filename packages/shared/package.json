@@ -1,0 +1,14 @@
+{
+  "name": "@gitflex/shared",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@gitflex/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

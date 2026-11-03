@@ -1,0 +1,25 @@
+{
+  "name": "@gitflex/github",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@gitflex/shared": "workspace:*",
+    "@octokit/core": "^7.0.8",
+    "@octokit/graphql": "^9.0.5",
+    "@octokit/plugin-retry": "^8.1.1",
+    "@octokit/plugin-throttling": "^11.0.5",
+    "@octokit/request-error": "^7.1.2",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@gitflex/config": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}

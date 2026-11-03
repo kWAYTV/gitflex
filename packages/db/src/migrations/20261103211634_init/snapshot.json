@@ -3,17 +3,11 @@
   "version": "9",
   "dialect": "postgres",
   "id": "7e2ee290-fede-4582-9126-ed1dd0973faf",
-  "prevIds": [
-    "00000000-0000-0000-0000-000000000000"
-  ],
+  "prevIds": ["00000000-0000-0000-0000-000000000000"],
   "footprints": [
     {
       "statementType": "create_table",
-      "statementTarget": [
-        "table",
-        "public",
-        "account"
-      ],
+      "statementTarget": ["table", "public", "account"],
       "writes": [
         "s|tbl|public.account",
         "n|tbl|public.account",
@@ -22,17 +16,11 @@
         "n|type|public.account",
         "n|rel|public.account_pkey"
       ],
-      "reads": [
-        "n|sch|public"
-      ]
+      "reads": ["n|sch|public"]
     },
     {
       "statementType": "create_table",
-      "statementTarget": [
-        "table",
-        "public",
-        "session"
-      ],
+      "statementTarget": ["table", "public", "session"],
       "writes": [
         "s|tbl|public.session",
         "n|tbl|public.session",
@@ -42,17 +30,11 @@
         "n|rel|public.session_pkey",
         "n|rel|public.session_token_key"
       ],
-      "reads": [
-        "n|sch|public"
-      ]
+      "reads": ["n|sch|public"]
     },
     {
       "statementType": "create_table",
-      "statementTarget": [
-        "table",
-        "public",
-        "user"
-      ],
+      "statementTarget": ["table", "public", "user"],
       "writes": [
         "s|tbl|public.user",
         "n|tbl|public.user",
@@ -63,17 +45,11 @@
         "n|rel|public.user_email_key",
         "n|rel|public.user_username_key"
       ],
-      "reads": [
-        "n|sch|public"
-      ]
+      "reads": ["n|sch|public"]
     },
     {
       "statementType": "create_table",
-      "statementTarget": [
-        "table",
-        "public",
-        "verification"
-      ],
+      "statementTarget": ["table", "public", "verification"],
       "writes": [
         "s|tbl|public.verification",
         "n|tbl|public.verification",
@@ -82,18 +58,11 @@
         "n|type|public.verification",
         "n|rel|public.verification_pkey"
       ],
-      "reads": [
-        "n|sch|public"
-      ]
+      "reads": ["n|sch|public"]
     },
     {
       "statementType": "create_index",
-      "statementTarget": [
-        "index",
-        "public",
-        "account",
-        "account_userId_idx"
-      ],
+      "statementTarget": ["index", "public", "account", "account_userId_idx"],
       "writes": [
         "s|idx|public.account_userId_idx",
         "n|idx|public.account_userId_idx",
@@ -108,12 +77,7 @@
     },
     {
       "statementType": "create_index",
-      "statementTarget": [
-        "index",
-        "public",
-        "session",
-        "session_userId_idx"
-      ],
+      "statementTarget": ["index", "public", "session", "session_userId_idx"],
       "writes": [
         "s|idx|public.session_userId_idx",
         "n|idx|public.session_userId_idx",
@@ -148,11 +112,7 @@
     },
     {
       "statementType": "create_fk",
-      "statementTarget": [
-        "table",
-        "public",
-        "account"
-      ],
+      "statementTarget": ["table", "public", "account"],
       "writes": [
         "s|fk|public.account.account_user_id_user_id_fkey",
         "n|fk|public.account.account_user_id_user_id_fkey",
@@ -171,11 +131,7 @@
     },
     {
       "statementType": "create_fk",
-      "statementTarget": [
-        "table",
-        "public",
-        "session"
-      ],
+      "statementTarget": ["table", "public", "session"],
       "writes": [
         "s|fk|public.session.session_user_id_user_id_fkey",
         "n|fk|public.session.session_user_id_user_id_fkey",
@@ -741,14 +697,10 @@
       "table": "account",
       "name": "account_user_id_user_id_fkey",
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "entityType": "fks"
@@ -758,14 +710,10 @@
       "table": "session",
       "name": "session_user_id_user_id_fkey",
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "entityType": "fks"
@@ -774,9 +722,7 @@
       "schema": "public",
       "table": "account",
       "name": "account_pkey",
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "entityType": "pks"
     },
@@ -784,9 +730,7 @@
       "schema": "public",
       "table": "session",
       "name": "session_pkey",
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "entityType": "pks"
     },
@@ -794,9 +738,7 @@
       "schema": "public",
       "table": "user",
       "name": "user_pkey",
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "entityType": "pks"
     },
@@ -804,9 +746,7 @@
       "schema": "public",
       "table": "verification",
       "name": "verification_pkey",
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "entityType": "pks"
     },
@@ -815,9 +755,7 @@
       "table": "session",
       "name": "session_token_key",
       "nameExplicit": false,
-      "columns": [
-        "token"
-      ],
+      "columns": ["token"],
       "nullsNotDistinct": false,
       "entityType": "uniques"
     },
@@ -826,9 +764,7 @@
       "table": "user",
       "name": "user_email_key",
       "nameExplicit": false,
-      "columns": [
-        "email"
-      ],
+      "columns": ["email"],
       "nullsNotDistinct": false,
       "entityType": "uniques"
     },
@@ -837,9 +773,7 @@
       "table": "user",
       "name": "user_username_key",
       "nameExplicit": false,
-      "columns": [
-        "username"
-      ],
+      "columns": ["username"],
       "nullsNotDistinct": false,
       "entityType": "uniques"
     }

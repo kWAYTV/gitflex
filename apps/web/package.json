@@ -8,11 +8,14 @@
     "check-types": "tsc --noEmit",
     "dev": "next dev --port 3001",
     "env:generate": "varlock codegen",
+    "repos:sync": "bun scripts/sync-repositories.ts",
     "start": "next start --port 3001"
   },
   "dependencies": {
     "@gitflex/auth": "workspace:*",
+    "@gitflex/core": "workspace:*",
     "@gitflex/db": "workspace:*",
+    "@gitflex/shared": "workspace:*",
     "@gitflex/ui": "workspace:*",
     "@swc/helpers": "^0.5.23",
     "@varlock/nextjs-integration": "1.2.5",

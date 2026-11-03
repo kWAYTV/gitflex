@@ -1,0 +1,21 @@
+{
+  "name": "@gitflex/core",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@gitflex/db": "workspace:*",
+    "@gitflex/github": "workspace:*",
+    "@gitflex/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@gitflex/config": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}
