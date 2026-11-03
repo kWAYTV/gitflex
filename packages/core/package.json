@@ -9,9 +9,11 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@gitflex/analyzer": "workspace:*",
     "@gitflex/db": "workspace:*",
     "@gitflex/github": "workspace:*",
-    "@gitflex/shared": "workspace:*"
+    "@gitflex/shared": "workspace:*",
+    "@gitflex/technologies": "workspace:*"
   },
   "devDependencies": {
     "@gitflex/config": "workspace:*",

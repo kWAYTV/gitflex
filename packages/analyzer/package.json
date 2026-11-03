@@ -1,0 +1,24 @@
+{
+  "name": "@gitflex/analyzer",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@gitflex/technologies": "workspace:*",
+    "fast-xml-parser": "^5.12.0",
+    "linguist-languages": "^9.5.0",
+    "picomatch": "^4.0.7",
+    "smol-toml": "^1.9.1"
+  },
+  "devDependencies": {
+    "@gitflex/config": "workspace:*",
+    "@types/bun": "catalog:",
+    "@types/picomatch": "^4.0.3",
+    "typescript": "catalog:"
+  }
+}

@@ -24,6 +24,8 @@ export function createAuth(
       provider: "pg",
       schema: { account, session, user, verification },
     }),
+    // Profile fields are sourced from GitHub; allowing client updates would let users claim arbitrary usernames.
+    disabledPaths: ["/update-user"],
     plugins,
     secret: env.BETTER_AUTH_SECRET,
     socialProviders: {
@@ -38,7 +40,6 @@ export function createAuth(
     user: {
       additionalFields: {
         username: {
-          input: false,
           required: true,
           type: "string",
           unique: true,
