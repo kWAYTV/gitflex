@@ -2,12 +2,15 @@ import { analyzeRepository } from "@gitflex/analyzer/analyze";
 import { ANALYZER_VERSION } from "@gitflex/analyzer/version";
 import type { Database } from "@gitflex/db";
 import {
+  countRepositoryScans,
   createRepositoryScan,
   createScan,
   findLatestCompletedRepositoryScan,
+  findScan,
   finishRepositoryScan,
   insertRepositoryResults,
   listIncludedRepositories,
+  resetUnfinishedRepositoryScans,
   type ScanRepository,
   updateScan,
   upsertLanguages,
@@ -16,7 +19,7 @@ import {
 import type { ScanStatus, ScanTrigger } from "@gitflex/db/schema/analysis";
 import { createGitHubClient, type GitHubClient } from "@gitflex/github/client";
 import { getRepositoryHead } from "@gitflex/github/contents";
-import { isAppError } from "@gitflex/shared/errors";
+import { AppError, isAppError } from "@gitflex/shared/errors";
 import { REGISTRY_VERSION } from "@gitflex/technologies/registry";
 
 import {
@@ -29,28 +32,21 @@ import {
 import { createGitHubSnapshot } from "./snapshot";
 
 const DEFAULT_CONCURRENCY = 3;
+const UNIQUE_VIOLATION = "23505";
 
 export type RepositoryOutcome =
   | { status: "completed"; repositoryId: string; technologies: number }
   | { status: "skipped"; repositoryId: string; reason: string }
   | { status: "failed"; repositoryId: string; code: string; message: string };
 
-export interface RunScanInput {
-  accessToken: string;
-  concurrency?: number;
-  db: Database;
-  /** Re-analyze even when the commit and analyzer versions are unchanged. */
-  force?: boolean;
-  onProgress?: (repository: ScanRepository, outcome: RepositoryOutcome) => void;
-  triggerType: ScanTrigger;
-  userId: string;
-}
-
-export interface RunScanResult {
+export interface ScanCounts {
   completed: number;
   failed: number;
-  scanId: string;
   skipped: number;
+}
+
+export interface ScanResult extends ScanCounts {
+  scanId: string;
   status: ScanStatus;
 }
 
@@ -59,6 +55,48 @@ interface ScanContext {
   db: Database;
   force: boolean;
   scanId: string;
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  for (let current = error; current instanceof Error; current = current.cause) {
+    if ((current as { code?: unknown }).code === UNIQUE_VIOLATION) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Creates a queued scan. Throws `SCAN_ALREADY_RUNNING` when one is already queued or running. */
+export async function createQueuedScan(input: {
+  db: Database;
+  triggerType: ScanTrigger;
+  userId: string;
+}): Promise<string> {
+  try {
+    return await createScan(input.db, {
+      status: "queued",
+      triggerType: input.triggerType,
+      userId: input.userId,
+    });
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      // biome-ignore lint/style/useErrorCause: cause is passed through the options argument
+      throw new AppError(
+        "SCAN_ALREADY_RUNNING",
+        "A scan is already in progress.",
+        { cause: error }
+      );
+    }
+    throw error;
+  }
+}
+
+class RateLimitedSignal extends Error {
+  readonly appError: AppError;
+  constructor(appError: AppError) {
+    super(appError.message, { cause: appError });
+    this.appError = appError;
+  }
 }
 
 async function analyzeOne(
@@ -129,6 +167,11 @@ async function analyzeOne(
       technologies: results.technologies.length,
     };
   } catch (error) {
+    // Left unfinished on purpose: the resume path discards it and retries the repository.
+    if (isAppError(error) && error.code === "RATE_LIMITED") {
+      // biome-ignore lint/style/useErrorCause: the signal stores the error as its cause
+      throw new RateLimitedSignal(error);
+    }
     const code = isAppError(error) ? error.code : "ANALYSIS_FAILED";
     const message =
       error instanceof Error ? error.message.slice(0, 500) : "Analysis failed";
@@ -142,56 +185,91 @@ async function analyzeOne(
   }
 }
 
-function finalStatus(counts: {
-  completed: number;
-  failed: number;
-  notStarted: number;
-}): ScanStatus {
-  if (counts.failed === 0 && counts.notStarted === 0) {
+function settledStatus(counts: ScanCounts): ScanStatus {
+  if (counts.failed === 0) {
     return "completed";
   }
-  return counts.completed > 0 ? "partial" : "failed";
+  return counts.completed + counts.skipped > 0 ? "partial" : "failed";
 }
 
-/** Analyzes every included repository for a user. Runs in-process until the job queue lands. */
-export async function runRepositoryScan(
-  input: RunScanInput
-): Promise<RunScanResult> {
-  const { db } = input;
-  const repositories = await listIncludedRepositories(db, input.userId);
-  await upsertTechnologies(db, registryRows());
+export interface ExecuteScanInput {
+  accessToken: string;
+  concurrency?: number;
+  db: Database;
+  /** Re-analyze even when the commit and analyzer versions are unchanged. */
+  force?: boolean;
+  onProgress?: (
+    repository: ScanRepository,
+    outcome: RepositoryOutcome
+  ) => void | Promise<void>;
+  scanId: string;
+}
 
-  const scanId = await createScan(db, {
-    startedAt: new Date(),
+/**
+ * Executes a queued scan. Safe to call again for the same scan after a crash or
+ * retry: finished repositories are kept and only the remainder is analyzed.
+ * Throws `RATE_LIMITED` (with `retryAfter`) after returning the scan to `queued`.
+ */
+export async function executeScan(
+  input: ExecuteScanInput
+): Promise<ScanResult> {
+  const { db, scanId } = input;
+  const scan = await findScan(db, scanId);
+  if (!scan) {
+    throw new AppError("NOT_FOUND", `Scan ${scanId} does not exist.`);
+  }
+  if (scan.status !== "queued" && scan.status !== "running") {
+    return {
+      completed: scan.completedRepositories,
+      failed: scan.failedRepositories,
+      scanId,
+      skipped: scan.skippedRepositories,
+      status: scan.status,
+    };
+  }
+
+  const repositories = await listIncludedRepositories(db, scan.userId);
+  await upsertTechnologies(db, registryRows());
+  const finished = await resetUnfinishedRepositoryScans(db, scanId);
+  const pending = repositories.filter(
+    (repository) => !finished.has(repository.id)
+  );
+
+  await updateScan(db, scanId, {
+    errorSummary: null,
+    startedAt: scan.startedAt ?? new Date(),
+    status: "running",
     totalRepositories: repositories.length,
-    triggerType: input.triggerType,
-    userId: input.userId,
   });
+
   const context: ScanContext = {
     client: createGitHubClient(input.accessToken),
     db,
     force: input.force ?? false,
     scanId,
   };
-
-  const counts = { completed: 0, failed: 0, skipped: 0 };
   let next = 0;
-  let abortReason: string | null = null;
+  let rateLimit: AppError | null = null;
 
   const workerLoop = async () => {
-    while (abortReason === null && next < repositories.length) {
-      const repository = repositories[next];
+    while (rateLimit === null && next < pending.length) {
+      const repository = pending[next];
       next += 1;
       if (!repository) {
         break;
       }
-      // biome-ignore lint/performance/noAwaitInLoops: each worker processes its share sequentially; parallelism comes from the pool
-      const outcome = await analyzeOne(context, repository);
-      counts[outcome.status] += 1;
-      if (outcome.status === "failed" && outcome.code === "RATE_LIMITED") {
-        abortReason = outcome.message;
+      try {
+        // biome-ignore lint/performance/noAwaitInLoops: each worker processes its share sequentially; parallelism comes from the pool
+        const outcome = await analyzeOne(context, repository);
+        await input.onProgress?.(repository, outcome);
+      } catch (error) {
+        if (error instanceof RateLimitedSignal) {
+          rateLimit = error.appError;
+          break;
+        }
+        throw error;
       }
-      input.onProgress?.(repository, outcome);
+      const counts = await countRepositoryScans(db, scanId);
       await updateScan(db, scanId, {
         completedRepositories: counts.completed,
         currentStage: `analyzed ${repository.fullName}`,
@@ -204,22 +282,67 @@ export async function runRepositoryScan(
   const concurrency = Math.max(1, input.concurrency ?? DEFAULT_CONCURRENCY);
   await Promise.all(Array.from({ length: concurrency }, workerLoop));
 
-  const notStarted = repositories.length - next;
-  const status = finalStatus({ ...counts, notStarted });
+  const counts = await countRepositoryScans(db, scanId);
+  if (rateLimit) {
+    await updateScan(db, scanId, {
+      completedRepositories: counts.completed,
+      currentStage: null,
+      errorSummary: "Paused until the GitHub rate limit resets.",
+      failedRepositories: counts.failed,
+      skippedRepositories: counts.skipped,
+      status: "queued",
+    });
+    throw rateLimit;
+  }
+
+  const status = settledStatus(counts);
   await updateScan(db, scanId, {
     completedAt: new Date(),
+    completedRepositories: counts.completed,
     currentStage: null,
-    errorSummary: abortReason
-      ? `Stopped early: ${abortReason} ${notStarted} repositories not analyzed.`
-      : null,
-    skippedRepositories: counts.skipped + notStarted,
+    failedRepositories: counts.failed,
+    skippedRepositories: counts.skipped,
     status,
   });
+  return { ...counts, scanId, status };
+}
 
-  return {
-    ...counts,
-    scanId,
-    skipped: counts.skipped + notStarted,
+/** Terminal state for a scan that cannot continue (retries exhausted, token revoked). */
+export async function stopScan(
+  db: Database,
+  scanId: string,
+  reason: string
+): Promise<ScanStatus> {
+  await resetUnfinishedRepositoryScans(db, scanId);
+  const counts = await countRepositoryScans(db, scanId);
+  const status: ScanStatus =
+    counts.completed + counts.skipped > 0 ? "partial" : "failed";
+  await updateScan(db, scanId, {
+    completedAt: new Date(),
+    completedRepositories: counts.completed,
+    currentStage: null,
+    errorSummary: reason.slice(0, 500),
+    failedRepositories: counts.failed,
+    skippedRepositories: counts.skipped,
     status,
-  };
+  });
+  return status;
+}
+
+/** In-process scan for scripts: create, execute and settle without the queue. */
+export async function runRepositoryScan(
+  input: Omit<ExecuteScanInput, "scanId"> & {
+    triggerType: ScanTrigger;
+    userId: string;
+  }
+): Promise<ScanResult> {
+  const scanId = await createQueuedScan(input);
+  try {
+    return await executeScan({ ...input, scanId });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Scan failed";
+    const status = await stopScan(input.db, scanId, message);
+    const counts = await countRepositoryScans(input.db, scanId);
+    return { ...counts, scanId, status };
+  }
 }

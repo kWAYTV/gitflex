@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 import {
@@ -9,6 +9,7 @@ import {
   repositoryLanguage,
   repositoryScan,
   repositoryTechnology,
+  type ScanRow,
   type ScanStatus,
   type ScanTrigger,
   scan,
@@ -66,18 +67,26 @@ export function listIncludedRepositories(
     .orderBy(desc(repository.pushedAt));
 }
 
+const ACTIVE_SCAN_STATUSES: ScanStatus[] = ["queued", "running"];
+const UNFINISHED_REPOSITORY_STATUSES: RepositoryScanStatus[] = [
+  "queued",
+  "running",
+];
+
+/** Violates `scan_user_active_idx` when the user already has a queued or running scan. */
 export async function createScan(
   executor: Executor,
   values: {
-    startedAt: Date;
-    totalRepositories: number;
+    startedAt?: Date;
+    status: "queued" | "running";
+    totalRepositories?: number;
     triggerType: ScanTrigger;
     userId: string;
   }
 ): Promise<string> {
   const [row] = await executor
     .insert(scan)
-    .values({ ...values, status: "running" })
+    .values(values)
     .returning({ id: scan.id });
   if (!row) {
     throw new Error("Scan was not created");
@@ -89,16 +98,93 @@ export async function updateScan(
   executor: Executor,
   scanId: string,
   values: Partial<{
-    completedAt: Date;
+    completedAt: Date | null;
     completedRepositories: number;
     currentStage: string | null;
     errorSummary: string | null;
     failedRepositories: number;
     skippedRepositories: number;
+    startedAt: Date;
     status: ScanStatus;
+    totalRepositories: number;
   }>
 ): Promise<void> {
   await executor.update(scan).set(values).where(eq(scan.id, scanId));
+}
+
+export async function findScan(
+  executor: Executor,
+  scanId: string
+): Promise<ScanRow | null> {
+  const [row] = await executor
+    .select()
+    .from(scan)
+    .where(eq(scan.id, scanId))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function findLatestScan(
+  executor: Executor,
+  userId: string
+): Promise<ScanRow | null> {
+  const [row] = await executor
+    .select()
+    .from(scan)
+    .where(eq(scan.userId, userId))
+    .orderBy(desc(scan.createdAt))
+    .limit(1);
+  return row ?? null;
+}
+
+export function listActiveScans(
+  executor: Executor
+): Promise<Pick<ScanRow, "id" | "userId">[]> {
+  return executor
+    .select({ id: scan.id, userId: scan.userId })
+    .from(scan)
+    .where(inArray(scan.status, ACTIVE_SCAN_STATUSES));
+}
+
+/**
+ * Prepares a scan for (re)execution after a crash or retry: drops repository rows
+ * that never finished and returns the repositories that already reached a final state.
+ */
+export async function resetUnfinishedRepositoryScans(
+  executor: Executor,
+  scanId: string
+): Promise<Set<string>> {
+  await executor
+    .delete(repositoryScan)
+    .where(
+      and(
+        eq(repositoryScan.scanId, scanId),
+        inArray(repositoryScan.status, UNFINISHED_REPOSITORY_STATUSES)
+      )
+    );
+  const finished = await executor
+    .select({ repositoryId: repositoryScan.repositoryId })
+    .from(repositoryScan)
+    .where(eq(repositoryScan.scanId, scanId));
+  return new Set(finished.map((row) => row.repositoryId));
+}
+
+export async function countRepositoryScans(
+  executor: Executor,
+  scanId: string
+): Promise<{ completed: number; failed: number; skipped: number }> {
+  const rows = await executor
+    .select({ count: count(), status: repositoryScan.status })
+    .from(repositoryScan)
+    .where(eq(repositoryScan.scanId, scanId))
+    .groupBy(repositoryScan.status);
+  const counts = { completed: 0, failed: 0, skipped: 0 };
+  for (const row of rows) {
+    if (row.status in counts) {
+      counts[row.status as keyof typeof counts] = row.count;
+    }
+  }
+  return counts;
 }
 
 export async function createRepositoryScan(

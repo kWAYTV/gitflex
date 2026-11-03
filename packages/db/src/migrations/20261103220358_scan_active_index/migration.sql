@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "scan_user_active_idx" ON "scan" ("user_id") WHERE "status" in ('queued', 'running');

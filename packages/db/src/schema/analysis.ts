@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   bigint,
   boolean,
@@ -63,7 +64,13 @@ export const scan = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
   },
-  (table) => [index("scan_user_created_idx").on(table.userId, table.createdAt)]
+  (table) => [
+    index("scan_user_created_idx").on(table.userId, table.createdAt),
+    // At most one in-flight scan per user; concurrent "scan now" clicks hit this constraint.
+    uniqueIndex("scan_user_active_idx")
+      .on(table.userId)
+      .where(sql`${table.status} in ('queued', 'running')`),
+  ]
 );
 
 export interface StageSummary {

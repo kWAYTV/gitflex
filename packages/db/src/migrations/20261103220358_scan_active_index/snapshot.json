@@ -1,0 +1,57 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "d1e13e08-82fb-4f96-aba2-374a1dcd179f",
+  "prevIds": [
+    "a2bad0a9-54a2-4d23-89e9-099c1d1dbea8"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "scan",
+        "scan_user_active_idx"
+      ],
+      "writes": [
+        "s|idx|public.scan_user_active_idx",
+        "n|idx|public.scan_user_active_idx",
+        "e|idx|public.scan_user_active_idx",
+        "n|rel|public.scan_user_active_idx"
+      ],
+      "reads": [
+        "n|tbl|public.scan",
+        "n|sch|public",
+        "n|col|public.scan.user_id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "scan",
+        "name": "scan_user_active_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": "\"status\" in ('queued', 'running')",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    }
+  ]
+}

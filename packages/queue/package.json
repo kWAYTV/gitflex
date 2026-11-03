@@ -1,0 +1,20 @@
+{
+  "name": "@gitflex/queue",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "bullmq": "^6.5.4",
+    "ioredis": "^6.0.0",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@gitflex/config": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}

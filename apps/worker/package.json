@@ -11,7 +11,12 @@
     "start": "bun run dist/index.mjs"
   },
   "dependencies": {
+    "@gitflex/auth": "workspace:*",
+    "@gitflex/core": "workspace:*",
     "@gitflex/db": "workspace:*",
+    "@gitflex/queue": "workspace:*",
+    "@gitflex/shared": "workspace:*",
+    "bullmq": "^6.5.4",
     "ioredis": "^6.0.0",
     "pino": "^10.4.0",
     "varlock": "catalog:",
